@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { NavTab, ArenaMode, WalletState } from './types';
 import { Navbar } from './components/Navbar';
 import { FlightTerminal } from './components/FlightTerminal';
@@ -84,6 +84,14 @@ export default function App() {
     }));
   };
 
+  const handleKillsUpdate = useCallback((nextKills: number) => {
+    setPlayerKills(nextKills);
+  }, []);
+
+  const handleScoreUpdate = useCallback((nextScore: number) => {
+    setPlayerScore(nextScore);
+  }, []);
+
   const handleLaunchArena = () => {
     setIsFullscreenArenaOpen(true);
   };
@@ -103,7 +111,7 @@ export default function App() {
       />
 
       {/* Main View Router */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col pt-32 md:pt-32 xl:pt-24">
         {activeTab === 'play-now' && (
           <div className="flex flex-col">
             {/* HERO SECTION: Flight Terminal (Left) + Interactive Vector Arena (Right) */}
@@ -124,8 +132,8 @@ export default function App() {
                 <div className="lg:col-span-7 flex flex-col min-h-[460px] lg:min-h-[540px]">
                   <ArenaCanvas
                     callsign={callsign}
-                    onKillsUpdate={(k) => setPlayerKills(k)}
-                    onScoreUpdate={(s) => setPlayerScore(s)}
+                    onKillsUpdate={handleKillsUpdate}
+                    onScoreUpdate={handleScoreUpdate}
                     onToggleFullscreen={handleLaunchArena}
                   />
                 </div>
@@ -222,8 +230,8 @@ export default function App() {
         isOpen={isFullscreenArenaOpen}
         onClose={() => setIsFullscreenArenaOpen(false)}
         callsign={callsign}
-        onKillsUpdate={(k) => setPlayerKills(k)}
-        onScoreUpdate={(s) => setPlayerScore(s)}
+        onKillsUpdate={handleKillsUpdate}
+        onScoreUpdate={handleScoreUpdate}
         soundMuted={soundMuted}
         onToggleSound={handleToggleSound}
       />

@@ -549,6 +549,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             break;
           }
         }
+
       });
 
       // Render Bot Trails

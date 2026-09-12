@@ -1,0 +1,6 @@
+{
+  "name": "Driftline",
+  "description": "Tactical multiplayer cyber-vector light trail arena. Feed on light, outmaneuver rival pilots, and outgrow the dark.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

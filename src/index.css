@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  h1, h2, h3, h4, .font-display, .font-headline {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  body {
+    background-color: #0d141d;
+    color: #dce3f0;
+    overflow-x: hidden;
+  }
+
+  /* Custom subtle tactical scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080f18;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #19202a;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 245, 212, 0.2);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e353f;
+  }
+}
+
+/* Tactical Neon Shadows & Glows */
+.glow-cyan-sm {
+  box-shadow: 0 0 12px rgba(0, 245, 212, 0.25);
+}
+.glow-cyan-md {
+  box-shadow: 0 0 24px rgba(0, 245, 212, 0.45);
+}
+.glow-cyan-lg {
+  box-shadow: 0 0 35px rgba(0, 245, 212, 0.65);
+}
+.glow-rose-sm {
+  box-shadow: 0 0 12px rgba(255, 178, 183, 0.3);
+}
+.glow-gold-sm {
+  box-shadow: 0 0 12px rgba(249, 189, 34, 0.3);
+}
+.glow-text-cyan {
+  text-shadow: 0 0 20px rgba(0, 245, 212, 0.6), 0 0 40px rgba(0, 245, 212, 0.3);
+}
+.glow-text-rose {
+  text-shadow: 0 0 15px rgba(255, 178, 183, 0.5);
+}
+.glow-text-gold {
+  text-shadow: 0 0 15px rgba(249, 189, 34, 0.5);
+}
+
+/* Background tactical grid pattern */
+.bg-tactical-grid {
+  background-image: radial-gradient(rgba(0, 245, 212, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-hex-pattern {
+  background-color: #07111a;
+  background-image: radial-gradient(circle, rgba(0, 245, 212, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+

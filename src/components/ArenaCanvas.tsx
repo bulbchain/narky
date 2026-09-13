@@ -249,6 +249,13 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
     const dpr = window.devicePixelRatio || 1;
 
+    // Expand World Dimensions (Slither.io style huge arena)
+    const WORLD_WIDTH = 3200;
+    const WORLD_HEIGHT = 3200;
+    const ARENA_CENTER_X = WORLD_WIDTH / 2;
+    const ARENA_CENTER_Y = WORLD_HEIGHT / 2;
+    const ARENA_RADIUS = WORLD_WIDTH / 2 - 40; // Circular Arena Radius
+
     /*
      * Resize canvas
      */
@@ -283,46 +290,41 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       '#ffb2b7',
       '#70a4ff',
       '#ffffff',
+      '#e60067',
+      '#2bd966',
     ];
 
     const createOrb = (
       x?: number,
       y?: number
-    ): Orb => ({
-      x:
-        x !== undefined
-          ? x
-          : Math.random() * (width - 60) + 30,
+    ): Orb => {
+      let orbX = x;
+      let orbY = y;
 
-      y:
-        y !== undefined
-          ? y
-          : Math.random() * (height - 60) + 30,
+      // Keep orb spawn within the circular boundary
+      if (orbX === undefined || orbY === undefined) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * (ARENA_RADIUS - 60);
+        orbX = ARENA_CENTER_X + Math.cos(angle) * r;
+        orbY = ARENA_CENTER_Y + Math.sin(angle) * r;
+      }
 
-      radius: Math.random() * 2.2 + 2,
+      return {
+        x: orbX,
+        y: orbY,
+        radius: Math.random() * 2.2 + 2,
+        color: orbPalette[Math.floor(Math.random() * orbPalette.length)],
+        pulse: Math.random() * Math.PI * 2,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        value: Math.random() > 0.75 ? 50 : 25,
+      };
+    };
 
-      color:
-        orbPalette[
-          Math.floor(
-            Math.random() * orbPalette.length
-          )
-        ],
-
-      pulse: Math.random() * Math.PI * 2,
-
-      vx: (Math.random() - 0.5) * 0.4,
-
-      vy: (Math.random() - 0.5) * 0.4,
-
-      value:
-        Math.random() > 0.75
-          ? 50
-          : 25,
-    });
-
+    // Increased Orb Count to 400 for large map
     let orbs: Orb[] = Array.from(
       {
-        length: 65,
+        length: 400,
       },
       () => createOrb()
     );
@@ -398,9 +400,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const player = {
       name: callsign || 'CYBER_GHOST',
 
-      x: width * 0.5,
+      x: ARENA_CENTER_X,
 
-      y: height * 0.6,
+      y: ARENA_CENTER_Y,
 
       angle: -Math.PI / 2,
 
@@ -417,6 +419,12 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       color: '#00f5d4',
     };
 
+    // Camera view offset
+    const camera = {
+      x: player.x - width / 2,
+      y: player.y - height / 2,
+    };
+
     /*
      * Initial player trail
      */
@@ -428,108 +436,49 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     }
 
     /*
-     * BOTS
+     * BOTS POOL GENERATOR (Multi-Bot Support)
      */
-    const bots: BotCraft[] = [
-      {
-        name: 'WILL',
-        color: '#38bdf8',
-        coreColor: '#ffffff',
+    const createBotPool = (count: number): BotCraft[] => {
+      const botNames = [
+        'WILL', 'VORTEX_9', 'PYRE', 'DRIFTER', 'BARRELEYE', 
+        'NAUTILUS', 'RATTATI', 'SWITCHHEAD', 'HYDRA', 'TITAN', 
+        'SOLARIS', 'CYPHER', 'SPECTRE', 'NEXUS', 'ZERO'
+      ];
+      const colors = [
+        '#00c3ff', '#2bd966', '#e60067', '#38bdf8', 
+        '#00f5d4', '#c084fc', '#ff4655', '#ffd57d'
+      ];
 
-        x: width * 0.52,
-        y: height * 0.22,
-
-        angle: Math.PI * 0.35,
-
-        speed: 1.9,
-
-        trail: [],
-
-        maxTrail: 26,
-
-        thickness: 7.5,
-
-        turnRate: 0.04,
-
-        score: 617,
-      },
-
-      {
-        name: 'VORTEX_9',
-        color: '#00f5d4',
-        coreColor: '#ffffff',
-
-        x: width * 0.18,
-        y: height * 0.68,
-
-        angle: 0.3,
-
-        speed: 2.0,
-
-        trail: [],
-
-        maxTrail: 30,
-
-        thickness: 7.5,
-
-        turnRate: 0.045,
-
-        score: 548,
-      },
-
-      {
-        name: 'PYRE',
-        color: '#c084fc',
-        coreColor: '#ffffff',
-
-        x: width * 0.86,
-        y: height * 0.15,
-
-        angle: -0.1,
-
-        speed: 2.1,
-
-        trail: [],
-
-        maxTrail: 28,
-
-        thickness: 7,
-
-        turnRate: 0.04,
-
-        score: 484,
-      },
-    ];
-
-    /*
-     * Initial bot trails
-     */
-    bots.forEach((bot, idx) => {
-      if (idx === 0) {
-        for (let i = 0; i < 18; i++) {
-          bot.trail.push({
-            x: bot.x - i * 2,
-            y: bot.y - i * 4,
-          });
+      return Array.from({ length: count }, (_, i) => {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * (ARENA_RADIUS - 100);
+        const bx = ARENA_CENTER_X + Math.cos(angle) * r;
+        const by = ARENA_CENTER_Y + Math.sin(angle) * r;
+        
+        const bTrail: TrailPoint[] = [];
+        for (let j = 0; j < 18; j++) {
+          bTrail.push({ x: bx - j * 2, y: by - j * 2 });
         }
-      } else if (idx === 1) {
-        for (let i = 0; i < 18; i++) {
-          bot.trail.push({
-            x: bot.x - i * 3.5,
-            y:
-              bot.y -
-              Math.sin(i * 0.3) * 2,
-          });
-        }
-      } else {
-        for (let i = 0; i < 18; i++) {
-          bot.trail.push({
-            x: bot.x - i * 3,
-            y: bot.y - i * 0.5,
-          });
-        }
-      }
-    });
+
+        return {
+          name: `${botNames[i % botNames.length]}_${Math.floor(Math.random() * 89 + 10)}`,
+          color: colors[i % colors.length],
+          coreColor: '#ffffff',
+          x: bx,
+          y: by,
+          angle: Math.random() * Math.PI * 2,
+          speed: 1.8 + Math.random() * 0.6,
+          trail: bTrail,
+          maxTrail: Math.floor(Math.random() * 15 + 25),
+          thickness: 7.5,
+          turnRate: 0.04 + Math.random() * 0.01,
+          score: Math.floor(Math.random() * 500 + 100),
+        };
+      });
+    };
+
+    // Instantiate 20 Bots dynamically
+    let bots: BotCraft[] = createBotPool(20);
 
     let isBoosting = false;
 
@@ -556,9 +505,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       localKills = 0;
 
-      player.x = width * 0.5;
+      player.x = ARENA_CENTER_X;
 
-      player.y = height * 0.6;
+      player.y = ARENA_CENTER_Y;
 
       player.angle = -Math.PI / 2;
 
@@ -574,23 +523,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       mobileInput.boost = false;
 
-      bots.forEach((b) => {
-        b.x =
-          Math.random() *
-            (width - 80) +
-          40;
-
-        b.y =
-          Math.random() *
-            (height - 80) +
-          40;
-
-        b.trail = [];
-      });
+      bots = createBotPool(20);
 
       orbs = Array.from(
         {
-          length: 65,
+          length: 400,
         },
         () => createOrb()
       );
@@ -636,8 +573,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
     /*
      * TOUCH MOVE
-     *
-     * Ignore mobile controls.
      */
     const onTouchMove = (e: TouchEvent) => {
       if (
@@ -820,115 +755,41 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       ctx.save();
 
       ctx.strokeStyle =
-        'rgba(0, 245, 212, 0.07)';
+        'rgba(0, 245, 212, 0.05)';
 
       ctx.lineWidth = 0.8;
 
       const hexR = 24;
+      const hexH = hexR * Math.sqrt(3);
 
-      const hexH =
-        hexR * Math.sqrt(3);
+      // Render grid covering visible camera window + padding
+      const startX = Math.floor(camera.x / (hexR * 3)) * (hexR * 3) - hexR * 3;
+      const endX = camera.x + width + hexR * 3;
+      const startY = Math.floor(camera.y / hexH) * hexH - hexH;
+      const endY = camera.y + height + hexH;
 
-      const shiftX =
-        (t *
-          (isBoosting
-            ? 1.4
-            : 0.5)) %
-        (hexR * 3);
-
-      for (
-        let x =
-          -shiftX -
-          hexR * 2;
-
-        x <
-        width +
-          hexR * 2;
-
-        x += hexR * 3
-      ) {
-        for (
-          let y =
-            -hexH;
-
-          y <
-          height +
-            hexH * 2;
-
-          y += hexH
-        ) {
+      for (let x = startX; x < endX; x += hexR * 3) {
+        for (let y = startY; y < endY; y += hexH) {
           ctx.beginPath();
-
-          for (
-            let i = 0;
-            i < 6;
-            i++
-          ) {
-            const angle =
-              (Math.PI / 3) *
-              i;
-
-            const hx =
-              x +
-              hexR *
-                Math.cos(
-                  angle
-                );
-
-            const hy =
-              y +
-              hexR *
-                Math.sin(
-                  angle
-                );
-
-            if (i === 0) {
-              ctx.moveTo(hx, hy);
-            } else {
-              ctx.lineTo(hx, hy);
-            }
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const hx = x + hexR * Math.cos(angle);
+            const hy = y + hexR * Math.sin(angle);
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
           }
-
           ctx.closePath();
-
           ctx.stroke();
 
           ctx.beginPath();
-
-          for (
-            let i = 0;
-            i < 6;
-            i++
-          ) {
-            const angle =
-              (Math.PI / 3) *
-              i;
-
-            const hx =
-              x +
-              hexR * 1.5 +
-              hexR *
-                Math.cos(
-                  angle
-                );
-
-            const hy =
-              y +
-              hexH * 0.5 +
-              hexR *
-                Math.sin(
-                  angle
-                );
-
-            if (i === 0) {
-              ctx.moveTo(hx, hy);
-            } else {
-              ctx.lineTo(hx, hy);
-            }
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const hx = x + hexR * 1.5 + hexR * Math.cos(angle);
+            const hy = y + hexH * 0.5 + hexR * Math.sin(angle);
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
           }
-
           ctx.closePath();
-
           ctx.stroke();
         }
       }
@@ -946,341 +807,163 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
        * Clear canvas
        */
       ctx.fillStyle = '#07111a';
+      ctx.fillRect(0, 0, width, height);
 
-      ctx.fillRect(
-        0,
-        0,
-        width,
-        height
-      );
+      // Camera smooth follow interpolation
+      camera.x += (player.x - width / 2 - camera.x) * 0.1;
+      camera.y += (player.y - height / 2 - camera.y) * 0.1;
+
+      ctx.save();
+      // Apply Camera Transform
+      ctx.translate(-camera.x, -camera.y);
 
       drawGrid(frame);
 
       /*
-       * Boundary
+       * NEON GREEN CIRCULAR BOUNDARY
        */
-      ctx.strokeStyle =
-        'rgba(255, 70, 85, 0.3)';
+      ctx.save();
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#00ff66';
+      ctx.strokeStyle = 'rgba(0, 255, 102, 0.8)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(ARENA_CENTER_X, ARENA_CENTER_Y, ARENA_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
 
-      ctx.lineWidth = 1;
-
-      ctx.strokeRect(
-        4,
-        4,
-        width - 8,
-        height - 8
-      );
+      // Outer glow circle
+      ctx.strokeStyle = 'rgba(0, 255, 102, 0.2)';
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.arc(ARENA_CENTER_X, ARENA_CENTER_Y, ARENA_RADIUS, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
 
       /*
        * ORBS
        */
-      for (
-        let i = 0;
-        i < orbs.length;
-        i++
-      ) {
+      for (let i = 0; i < orbs.length; i++) {
         const orb = orbs[i];
 
-        if (
-          !isPausedRef.current
-        ) {
+        if (!isPausedRef.current) {
           orb.x += orb.vx;
-
           orb.y += orb.vy;
-
           orb.pulse += 0.05;
         }
 
-        if (orb.x < 8) {
-          orb.x = width - 8;
+        // Keep Orbs strictly within the Circular Arena
+        const distFromCenter = Math.hypot(orb.x - ARENA_CENTER_X, orb.y - ARENA_CENTER_Y);
+        if (distFromCenter > ARENA_RADIUS - 10) {
+          const angle = Math.atan2(orb.y - ARENA_CENTER_Y, orb.x - ARENA_CENTER_X);
+          orb.x = ARENA_CENTER_X + Math.cos(angle) * (ARENA_RADIUS - 20);
+          orb.y = ARENA_CENTER_Y + Math.sin(angle) * (ARENA_RADIUS - 20);
+          orb.vx = -orb.vx;
+          orb.vy = -orb.vy;
         }
 
-        if (
-          orb.x >
-          width - 8
-        ) {
-          orb.x = 8;
-        }
-
-        if (orb.y < 8) {
-          orb.y = height - 8;
-        }
-
-        if (
-          orb.y >
-          height - 8
-        ) {
-          orb.y = 8;
-        }
-
-        const currentR =
-          orb.radius +
-          Math.sin(
-            orb.pulse
-          ) *
-            0.7;
+        const currentR = orb.radius + Math.sin(orb.pulse) * 0.7;
 
         ctx.save();
-
         ctx.shadowBlur = 10;
-
-        ctx.shadowColor =
-          orb.color;
-
-        ctx.fillStyle =
-          orb.color;
-
+        ctx.shadowColor = orb.color;
+        ctx.fillStyle = orb.color;
         ctx.beginPath();
-
-        ctx.arc(
-          orb.x,
-          orb.y,
-          Math.max(
-            1,
-            currentR
-          ),
-          0,
-          Math.PI * 2
-        );
-
+        ctx.arc(orb.x, orb.y, Math.max(1, currentR), 0, Math.PI * 2);
         ctx.fill();
-
         ctx.restore();
       }
 
       /*
        * PLAYER STEERING
        */
-      const boostActive =
-        isBoosting ||
-        mobileInput.boost;
+      const boostActive = isBoosting || mobileInput.boost;
+      const currentSpeed = boostActive ? player.boostSpeed : player.baseSpeed;
 
-      const currentSpeed =
-        boostActive
-          ? player.boostSpeed
-          : player.baseSpeed;
-
-      if (
-        !isPausedRef.current
-      ) {
+      if (!isPausedRef.current) {
         /*
          * MOBILE JOYSTICK
          */
-        if (
-          mobileInput.active
-        ) {
-          const targetAngle =
-            Math.atan2(
-              mobileInput.dy,
-              mobileInput.dx
-            );
+        if (mobileInput.active) {
+          const targetAngle = Math.atan2(mobileInput.dy, mobileInput.dx);
+          let diff = targetAngle - player.angle;
 
-          let diff =
-            targetAngle -
-            player.angle;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
 
-          while (
-            diff < -Math.PI
-          ) {
-            diff +=
-              Math.PI * 2;
-          }
-
-          while (
-            diff > Math.PI
-          ) {
-            diff -=
-              Math.PI * 2;
-          }
-
-          player.angle +=
-            diff *
-            (isBoosting
-              ? 0.16
-              : 0.13);
+          player.angle += diff * (isBoosting ? 0.16 : 0.13);
         }
-
         /*
-         * MOUSE
+         * MOUSE (World-Space Coordinates)
          */
-        else if (
-          mouse.active
-        ) {
-          const targetAngle =
-            Math.atan2(
-              mouse.y -
-                player.y,
-              mouse.x -
-                player.x
-            );
+        else if (mouse.active) {
+          const worldMouseX = mouse.x + camera.x;
+          const worldMouseY = mouse.y + camera.y;
 
-          let diff =
-            targetAngle -
-            player.angle;
+          const targetAngle = Math.atan2(
+            worldMouseY - player.y,
+            worldMouseX - player.x
+          );
 
-          while (
-            diff < -Math.PI
-          ) {
-            diff +=
-              Math.PI * 2;
-          }
+          let diff = targetAngle - player.angle;
 
-          while (
-            diff > Math.PI
-          ) {
-            diff -=
-              Math.PI * 2;
-          }
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
 
-          player.angle +=
-            diff *
-            (isBoosting
-              ? 0.12
-              : 0.08);
+          player.angle += diff * (isBoosting ? 0.12 : 0.08);
         }
 
-        player.x +=
-          Math.cos(
-            player.angle
-          ) *
-          currentSpeed;
-
-        player.y +=
-          Math.sin(
-            player.angle
-          ) *
-          currentSpeed;
+        player.x += Math.cos(player.angle) * currentSpeed;
+        player.y += Math.sin(player.angle) * currentSpeed;
       }
 
       /*
-       * PLAYER BOUNDARY
+       * PLAYER CIRCULAR BOUNDARY COLLISION CHECK
        */
-      const margin = 16;
+      const playerDistFromCenter = Math.hypot(
+        player.x - ARENA_CENTER_X,
+        player.y - ARENA_CENTER_Y
+      );
 
-      if (
-        player.x < margin ||
-        player.x >
-          width - margin ||
-        player.y < margin ||
-        player.y >
-          height - margin
-      ) {
-        emitSparks(
-          player.x,
-          player.y,
-          player.color,
-          35,
-          3
-        );
-
-        addScorePopup(
-          player.x,
-          player.y - 20,
-          `CRASHED! -200`,
-          '#ffb2b7'
-        );
-
+      if (playerDistFromCenter >= ARENA_RADIUS - 10) {
+        emitSparks(player.x, player.y, '#00ff66', 35, 3);
+        addScorePopup(player.x, player.y - 20, `CRASHED! -200`, '#ffb2b7');
         sounds.playShatter();
 
-        setAlertText(
-          'YOU CRASHED'
-        );
-
-        setAlertColor(
-          '#ffb2b7'
-        );
+        setAlertText('YOU CRASHED');
+        setAlertColor('#ffb2b7');
 
         setTimeout(() => {
-          setAlertText(
-            'TRAIL COLLISION'
-          );
+          setAlertText('TRAIL COLLISION');
         }, 2600);
 
-        localScore =
-          Math.max(
-            0,
-            localScore - 200
-          );
+        localScore = Math.max(0, localScore - 200);
+        setScore(Math.floor(localScore));
+        setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
 
-        setScore(
-          Math.floor(
-            localScore
-          )
-        );
+        if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
 
-        setBestToday(
-          (prev) =>
-            Math.max(
-              prev,
-              Math.floor(
-                localScore
-              )
-            )
-        );
-
-        if (onScoreUpdate) {
-          onScoreUpdate(
-            Math.floor(
-              localScore
-            )
-          );
-        }
-
-        player.x =
-          width * 0.5;
-
-        player.y =
-          height * 0.6;
-
-        player.angle =
-          -Math.PI / 2;
-
+        player.x = ARENA_CENTER_X;
+        player.y = ARENA_CENTER_Y;
+        player.angle = -Math.PI / 2;
         player.trail = [];
 
         isBoosting = false;
+        mobileInput.boost = false;
+        isPausedRef.current = true;
 
-        mobileInput.boost =
-          false;
+        setLastScore(Math.floor(localScore));
+        setShareAvailable(true);
+        setShowDeathModal(true);
 
-        isPausedRef.current =
-          true;
-
-        setLastScore(
-          Math.floor(
-            localScore
-          )
-        );
-
-        setShareAvailable(
-          true
-        );
-
-        setShowDeathModal(
-          true
-        );
-
-        setTimeout(() => {
-          setShareAvailable(
-            false
-          );
-        }, 15000);
+        setTimeout(() => setShareAvailable(false), 15000);
       }
 
       /*
        * PLAYER TRAIL
        */
-      if (
-        !isPausedRef.current
-      ) {
-        player.trail.unshift({
-          x: player.x,
-          y: player.y,
-        });
-
-        if (
-          player.trail.length >
-          player.maxTrail
-        ) {
+      if (!isPausedRef.current) {
+        player.trail.unshift({ x: player.x, y: player.y });
+        if (player.trail.length > player.maxTrail) {
           player.trail.pop();
         }
       }
@@ -1288,822 +971,341 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       /*
        * BOOST
        */
-      if (
-        !isPausedRef.current &&
-        boostActive
-      ) {
-        localScore =
-          Math.max(
-            10,
-            localScore - 0.2
-          );
-
-        if (
-          frame % 3 === 0
-        ) {
-          emitSparks(
-            player.x,
-            player.y,
-            '#00f5d4',
-            2,
-            1.2
-          );
+      if (!isPausedRef.current && boostActive) {
+        localScore = Math.max(10, localScore - 0.2);
+        if (frame % 3 === 0) {
+          emitSparks(player.x, player.y, '#00f5d4', 2, 1.2);
         }
       }
 
       /*
        * ORB COLLECTION
        */
-      for (
-        let i =
-          orbs.length - 1;
-        i >= 0;
-        i--
-      ) {
-        const orb =
-          orbs[i];
+      for (let i = orbs.length - 1; i >= 0; i--) {
+        const orb = orbs[i];
+        const dx = player.x - orb.x;
+        const dy = player.y - orb.y;
+        const dist = Math.hypot(dx, dy);
 
-        const dx =
-          player.x -
-          orb.x;
+        if (dist < player.thickness + orb.radius + 6) {
+          if (!isPausedRef.current) {
+            localScore += orb.value;
+            player.maxTrail = Math.min(120, player.maxTrail + 1);
 
-        const dy =
-          player.y -
-          orb.y;
+            emitSparks(orb.x, orb.y, orb.color, 8, 1.2);
+            addScorePopup(orb.x, orb.y - 10, `+${orb.value}`, orb.color);
+            sounds.playOrbChime(orb.value);
 
-        const dist =
-          Math.hypot(
-            dx,
-            dy
-          );
+            orbs[i] = createOrb();
+            setScore(Math.floor(localScore));
+            setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
 
-        if (
-          dist <
-          player.thickness +
-            orb.radius +
-            6
-        ) {
-          if (
-            !isPausedRef.current
-          ) {
-            localScore +=
-              orb.value;
-
-            player.maxTrail =
-              Math.min(
-                80,
-                player.maxTrail +
-                  1
-              );
-
-            emitSparks(
-              orb.x,
-              orb.y,
-              orb.color,
-              8,
-              1.2
-            );
-
-            addScorePopup(
-              orb.x,
-              orb.y - 10,
-              `+${orb.value}`,
-              orb.color
-            );
-
-            sounds.playOrbChime(
-              orb.value
-            );
-
-            orbs[i] =
-              createOrb();
-
-            setScore(
-              Math.floor(
-                localScore
-              )
-            );
-
-            setBestToday(
-              (prev) =>
-                Math.max(
-                  prev,
-                  Math.floor(
-                    localScore
-                  )
-                )
-            );
-
-            if (onScoreUpdate) {
-              onScoreUpdate(
-                Math.floor(
-                  localScore
-                )
-              );
-            }
+            if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
           }
         }
       }
 
       /*
-       * BOTS
-       */
-      bots.forEach(
-        (bot) => {
-          if (
-            isPausedRef.current
-          ) {
-            return;
-          }
-
-          let closestOrb:
-            | Orb
-            | null = null;
-
-          let minDist = 180;
-
-          for (
-            let i = 0;
-            i < orbs.length;
-            i++
-          ) {
-            const d =
-              Math.hypot(
-                orbs[i].x -
-                  bot.x,
-                orbs[i].y -
-                  bot.y
-              );
-
-            if (
-              d < minDist
-            ) {
-              minDist = d;
-
-              closestOrb =
-                orbs[i];
-            }
-          }
-
-          if (
-            closestOrb
-          ) {
-            const targetAngle =
-              Math.atan2(
-                closestOrb.y -
-                  bot.y,
-                closestOrb.x -
-                  bot.x
-              );
-
-            let diff =
-              targetAngle -
-              bot.angle;
-
-            while (
-              diff < -Math.PI
-            ) {
-              diff +=
-                Math.PI * 2;
-            }
-
-            while (
-              diff > Math.PI
-            ) {
-              diff -=
-                Math.PI * 2;
-            }
-
-            bot.angle +=
-              diff *
-              bot.turnRate;
-          } else {
-            bot.angle +=
-              (Math.random() -
-                0.5) *
-              0.08;
-          }
-
-          bot.x +=
-            Math.cos(
-              bot.angle
-            ) *
-            bot.speed;
-
-          bot.y +=
-            Math.sin(
-              bot.angle
-            ) *
-            bot.speed;
-
-          /*
-           * BOT BOUNDARY
-           */
-          if (
-            bot.x < 24 ||
-            bot.x >
-              width - 24 ||
-            bot.y < 24 ||
-            bot.y >
-              height - 24
-          ) {
-            localKills += 1;
-
-            localScore +=
-              420;
-
-            emitSparks(
-              bot.x,
-              bot.y,
-              bot.color,
-              35,
-              3
-            );
-
-            addScorePopup(
-              bot.x,
-              bot.y - 20,
-              `${bot.name} ELIMINATED! +420`,
-              '#ffb2b7'
-            );
-
-            sounds.playShatter();
-
-            setAlertText(
-              `${bot.name} ELIMINATED`
-            );
-
-            setAlertColor(
-              '#ffb2b7'
-            );
-
-            setTimeout(() => {
-              setAlertText(
-                'TRAIL COLLISION'
-              );
-            }, 2600);
-
-            setKills(
-              localKills
-            );
-
-            setScore(
-              Math.floor(
-                localScore
-              )
-            );
-
-            setBestToday(
-              (prev) =>
-                Math.max(
-                  prev,
-                  Math.floor(
-                    localScore
-                  )
-                )
-            );
-
-            if (
-              onKillsUpdate
-            ) {
-              onKillsUpdate(
-                localKills
-              );
-            }
-
-            if (
-              onScoreUpdate
-            ) {
-              onScoreUpdate(
-                Math.floor(
-                  localScore
-                )
-              );
-            }
-
-            bot.x =
-              Math.random() *
-                (width - 80) +
-              40;
-
-            bot.y =
-              Math.random() *
-                (height - 80) +
-              40;
-
-            bot.trail = [];
-          }
-
-          /*
-           * BOT TRAIL
-           */
-          bot.trail.unshift({
-            x: bot.x,
-            y: bot.y,
-          });
-
-          if (
-            bot.trail.length >
-            bot.maxTrail
-          ) {
-            bot.trail.pop();
-          }
-
-          /*
-           * BOT ORBS
-           */
-          for (
-            let i =
-              orbs.length - 1;
-            i >= 0;
-            i--
-          ) {
-            const d =
-              Math.hypot(
-                orbs[i].x -
-                  bot.x,
-                orbs[i].y -
-                  bot.y
-              );
-
-            if (
-              d <
-              bot.thickness +
-                orbs[i].radius +
-                5
-            ) {
-              emitSparks(
-                orbs[i].x,
-                orbs[i].y,
-                bot.color,
-                4,
-                0.8
-              );
-
-              orbs[i] =
-                createOrb();
-            }
-          }
-
-          /*
-           * PLAYER CUTS BOT
-           */
-          for (
-            let t = 6;
-            t <
-            player.trail.length;
-            t++
-          ) {
-            const td =
-              Math.hypot(
-                player.trail[t].x -
-                  bot.x,
-                player.trail[t].y -
-                  bot.y
-              );
-
-            if (
-              td <
-              player.thickness +
-                5
-            ) {
-              localKills += 1;
-
-              localScore +=
-                420;
-
-              emitSparks(
-                bot.x,
-                bot.y,
-                bot.color,
-                35,
-                3
-              );
-
-              addScorePopup(
-                bot.x,
-                bot.y - 20,
-                `${bot.name} SHATTERED! +420`,
-                '#ffb2b7'
-              );
-
-              sounds.playShatter();
-
-              setAlertText(
-                `${bot.name} ELIMINATED`
-              );
-
-              setAlertColor(
-                '#ffb2b7'
-              );
-
-              setTimeout(() => {
-                setAlertText(
-                  'TRAIL COLLISION'
-                );
-              }, 2600);
-
-              setKills(
-                localKills
-              );
-
-              setScore(
-                Math.floor(
-                  localScore
-                )
-              );
-
-              setBestToday(
-                (prev) =>
-                  Math.max(
-                    prev,
-                    Math.floor(
-                      localScore
-                    )
-                  )
-              );
-
-              if (
-                onKillsUpdate
-              ) {
-                onKillsUpdate(
-                  localKills
-                );
-              }
-
-              if (
-                onScoreUpdate
-              ) {
-                onScoreUpdate(
-                  Math.floor(
-                    localScore
-                  )
-                );
-              }
-
-              bot.x =
-                Math.random() *
-                  (width - 80) +
-                40;
-
-              bot.y =
-                Math.random() *
-                  (height - 80) +
-                40;
-
-              bot.trail = [];
-
-              break;
-            }
-          }
-
-          /*
-           * BOT CUTS PLAYER
-           */
-          for (
-            let t = 6;
-            t <
-            bot.trail.length;
-            t++
-          ) {
-            const pd =
-              Math.hypot(
-                bot.trail[t].x -
-                  player.x,
-                bot.trail[t].y -
-                  player.y
-              );
-
-            if (
-              pd <
-              player.thickness +
-                5
-            ) {
-              emitSparks(
-                player.x,
-                player.y,
-                player.color,
-                35,
-                3
-              );
-
-              addScorePopup(
-                player.x,
-                player.y - 20,
-                `KILLED BY ${bot.name}`,
-                '#ffb2b7'
-              );
-
-              sounds.playShatter();
-
-              setAlertText(
-                `KILLED BY ${bot.name}`
-              );
-
-              setAlertColor(
-                '#ffb2b7'
-              );
-
-              setTimeout(() => {
-                setAlertText(
-                  'TRAIL COLLISION'
-                );
-              }, 2600);
-
-              bot.score =
-                (bot.score || 0) +
-                420;
-
-              localScore =
-                Math.max(
-                  0,
-                  localScore - 200
-                );
-
-              setScore(
-                Math.floor(
-                  localScore
-                )
-              );
-
-              setBestToday(
-                (prev) =>
-                  Math.max(
-                    prev,
-                    Math.floor(
-                      localScore
-                    )
-                  )
-              );
-
-              if (
-                onScoreUpdate
-              ) {
-                onScoreUpdate(
-                  Math.floor(
-                    localScore
-                  )
-                );
-              }
-
-              player.x =
-                width * 0.5;
-
-              player.y =
-                height * 0.6;
-
-              player.angle =
-                -Math.PI / 2;
-
-              player.trail = [];
-
-              isBoosting = false;
-
-              mobileInput.boost =
-                false;
-
-              isPausedRef.current =
-                true;
-
-              setLastScore(
-                Math.floor(
-                  localScore
-                )
-              );
-
-              setShareAvailable(
-                true
-              );
-
-              setShowDeathModal(
-                true
-              );
-
-              setTimeout(() => {
-                setShareAvailable(
-                  false
-                );
-              }, 15000);
-
-              break;
-            }
-          }
-        }
-      );
-
-      /*
-       * BOT TRAILS
+       * BOTS LOOP
        */
       bots.forEach((bot) => {
-        if (
-          bot.trail.length >
-          2
-        ) {
+        if (isPausedRef.current) return;
+
+        let closestOrb: Orb | null = null;
+        let minDist = 220;
+
+        for (let i = 0; i < orbs.length; i++) {
+          const d = Math.hypot(orbs[i].x - bot.x, orbs[i].y - bot.y);
+          if (d < minDist) {
+            minDist = d;
+            closestOrb = orbs[i];
+          }
+        }
+
+        if (closestOrb) {
+          const targetAngle = Math.atan2(closestOrb.y - bot.y, closestOrb.x - bot.x);
+          let diff = targetAngle - bot.angle;
+
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+
+          bot.angle += diff * bot.turnRate;
+        } else {
+          bot.angle += (Math.random() - 0.5) * 0.08;
+        }
+
+        bot.x += Math.cos(bot.angle) * bot.speed;
+        bot.y += Math.sin(bot.angle) * bot.speed;
+
+        /*
+         * BOT CIRCULAR BOUNDARY CHECK
+         */
+        const botDistFromCenter = Math.hypot(bot.x - ARENA_CENTER_X, bot.y - ARENA_CENTER_Y);
+        if (botDistFromCenter >= ARENA_RADIUS - 15) {
+          const spawnAngle = Math.random() * Math.PI * 2;
+          const spawnR = Math.sqrt(Math.random()) * (ARENA_RADIUS - 150);
+          bot.x = ARENA_CENTER_X + Math.cos(spawnAngle) * spawnR;
+          bot.y = ARENA_CENTER_Y + Math.sin(spawnAngle) * spawnR;
+          bot.trail = [];
+        }
+
+        /*
+         * BOT TRAIL
+         */
+        bot.trail.unshift({ x: bot.x, y: bot.y });
+        if (bot.trail.length > bot.maxTrail) {
+          bot.trail.pop();
+        }
+
+        /*
+         * BOT ORBS
+         */
+        for (let i = orbs.length - 1; i >= 0; i--) {
+          const d = Math.hypot(orbs[i].x - bot.x, orbs[i].y - bot.y);
+          if (d < bot.thickness + orbs[i].radius + 5) {
+            emitSparks(orbs[i].x, orbs[i].y, bot.color, 4, 0.8);
+            orbs[i] = createOrb();
+          }
+        }
+
+        /*
+         * PLAYER CUTS BOT
+         */
+        for (let t = 6; t < player.trail.length; t++) {
+          const td = Math.hypot(player.trail[t].x - bot.x, player.trail[t].y - bot.y);
+          if (td < player.thickness + 5) {
+            localKills += 1;
+            localScore += 420;
+
+            emitSparks(bot.x, bot.y, bot.color, 35, 3);
+            addScorePopup(bot.x, bot.y - 20, `${bot.name} SHATTERED! +420`, '#ffb2b7');
+            sounds.playShatter();
+
+            setAlertText(`${bot.name} ELIMINATED`);
+            setAlertColor('#ffb2b7');
+
+            setTimeout(() => setAlertText('TRAIL COLLISION'), 2600);
+
+            setKills(localKills);
+            setScore(Math.floor(localScore));
+            setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+
+            if (onKillsUpdate) onKillsUpdate(localKills);
+            if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+
+            const spawnAngle = Math.random() * Math.PI * 2;
+            const spawnR = Math.sqrt(Math.random()) * (ARENA_RADIUS - 150);
+            bot.x = ARENA_CENTER_X + Math.cos(spawnAngle) * spawnR;
+            bot.y = ARENA_CENTER_Y + Math.sin(spawnAngle) * spawnR;
+            bot.trail = [];
+            break;
+          }
+        }
+
+        /*
+         * BOT CUTS PLAYER
+         */
+        for (let t = 6; t < bot.trail.length; t++) {
+          const pd = Math.hypot(bot.trail[t].x - player.x, bot.trail[t].y - player.y);
+          if (pd < player.thickness + 5) {
+            emitSparks(player.x, player.y, player.color, 35, 3);
+            addScorePopup(player.x, player.y - 20, `KILLED BY ${bot.name}`, '#ffb2b7');
+            sounds.playShatter();
+
+            setAlertText(`KILLED BY ${bot.name}`);
+            setAlertColor('#ffb2b7');
+
+            setTimeout(() => setAlertText('TRAIL COLLISION'), 2600);
+
+            bot.score = (bot.score || 0) + 420;
+            localScore = Math.max(0, localScore - 200);
+
+            setScore(Math.floor(localScore));
+            setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+
+            if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+
+            player.x = ARENA_CENTER_X;
+            player.y = ARENA_CENTER_Y;
+            player.angle = -Math.PI / 2;
+            player.trail = [];
+
+            isBoosting = false;
+            mobileInput.boost = false;
+            isPausedRef.current = true;
+
+            setLastScore(Math.floor(localScore));
+            setShareAvailable(true);
+            setShowDeathModal(true);
+
+            setTimeout(() => setShareAvailable(false), 15000);
+            break;
+          }
+        }
+      });
+
+      /*
+       * RENDER BOT TRAILS & CAPSULE HEADS
+       */
+      bots.forEach((bot) => {
+        if (bot.trail.length > 2) {
           ctx.save();
-
           ctx.lineCap = 'round';
-
           ctx.lineJoin = 'round';
-
           ctx.shadowBlur = 14;
-
-          ctx.shadowColor =
-            bot.color;
-
-          ctx.strokeStyle =
-            bot.color;
-
-          ctx.lineWidth =
-            bot.thickness;
+          ctx.shadowColor = bot.color;
+          ctx.strokeStyle = bot.color;
+          ctx.lineWidth = bot.thickness;
 
           ctx.beginPath();
-
-          ctx.moveTo(
-            bot.trail[0].x,
-            bot.trail[0].y
-          );
-
-          for (
-            let i = 1;
-            i <
-            bot.trail.length;
-            i++
-          ) {
-            ctx.lineTo(
-              bot.trail[i].x,
-              bot.trail[i].y
-            );
+          ctx.moveTo(bot.trail[0].x, bot.trail[0].y);
+          for (let i = 1; i < bot.trail.length; i++) {
+            ctx.lineTo(bot.trail[i].x, bot.trail[i].y);
           }
-
           ctx.stroke();
 
           /*
            * White core
            */
           ctx.shadowBlur = 4;
-
-          ctx.shadowColor =
-            '#ffffff';
-
-          ctx.strokeStyle =
-            bot.coreColor ||
-            '#ffffff';
-
+          ctx.shadowColor = '#ffffff';
+          ctx.strokeStyle = bot.coreColor || '#ffffff';
           ctx.lineWidth = 2.5;
-
           ctx.stroke();
 
           /*
-           * Bot head
+           * Bot head (Narky Capsule Character)
            */
-          ctx.fillStyle =
-            '#ffffff';
+          ctx.save();
+          ctx.translate(bot.x, bot.y);
+          ctx.rotate(bot.angle + Math.PI / 2);
+
+          const botCapW = 12;
+          const botCapH = 24;
+          const botCapR = botCapW / 2;
+
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = bot.color;
+          ctx.fillStyle = bot.color;
 
           ctx.beginPath();
-
-          ctx.arc(
-            bot.x,
-            bot.y,
-            5,
-            0,
-            Math.PI * 2
-          );
-
+          ctx.roundRect(-botCapW / 2, -botCapH / 2, botCapW, botCapH, botCapR);
           ctx.fill();
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.beginPath();
+          ctx.roundRect(-botCapW / 2 + 2, -botCapH / 2 + 2, botCapW - 4, botCapH / 2, botCapR);
+          ctx.fill();
+
+          const botEyeY = -botCapH / 4;
+          const botEyeOffset = botCapW / 3;
+          const botEyeRadius = botCapW / 5;
+          const botPupilRadius = botEyeRadius / 2;
+
+          [-botEyeOffset, botEyeOffset].forEach((offsetX) => {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(offsetX, botEyeY, botEyeRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(offsetX, botEyeY, botPupilRadius, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          ctx.restore();
 
           /*
            * Bot name
            */
           ctx.shadowBlur = 0;
-
-          ctx.fillStyle =
-            bot.color;
-
-          ctx.font =
-            '700 10px "JetBrains Mono", monospace';
-
-          ctx.fillText(
-            bot.name,
-            bot.x - 14,
-            bot.y - 12
-          );
+          ctx.fillStyle = bot.color;
+          ctx.font = '700 10px "JetBrains Mono", monospace';
+          ctx.fillText(bot.name, bot.x - 14, bot.y - 14);
 
           ctx.restore();
         }
       });
 
       /*
-       * PLAYER TRAIL
+       * RENDER PLAYER TRAIL & CAPSULE HEAD
        */
-      if (
-        player.trail.length >
-        2
-      ) {
+      if (player.trail.length > 2) {
         ctx.save();
-
         ctx.lineCap = 'round';
-
         ctx.lineJoin = 'round';
-
-        ctx.shadowBlur =
-          boostActive
-            ? 26
-            : 18;
-
-        ctx.shadowColor =
-          boostActive
-            ? '#26fedc'
-            : player.color;
-
-        ctx.strokeStyle =
-          player.color;
-
-        ctx.lineWidth =
-          boostActive
-            ? player.thickness + 2
-            : player.thickness;
+        ctx.shadowBlur = boostActive ? 26 : 18;
+        ctx.shadowColor = boostActive ? '#26fedc' : player.color;
+        ctx.strokeStyle = player.color;
+        ctx.lineWidth = boostActive ? player.thickness + 2 : player.thickness;
 
         ctx.beginPath();
-
-        ctx.moveTo(
-          player.trail[0].x,
-          player.trail[0].y
-        );
-
-        for (
-          let i = 1;
-          i <
-          player.trail.length;
-          i++
-        ) {
-          ctx.lineTo(
-            player.trail[i].x,
-            player.trail[i].y
-          );
+        ctx.moveTo(player.trail[0].x, player.trail[0].y);
+        for (let i = 1; i < player.trail.length; i++) {
+          ctx.lineTo(player.trail[i].x, player.trail[i].y);
         }
-
         ctx.stroke();
 
         /*
          * White laser core
          */
         ctx.shadowBlur = 8;
-
-        ctx.shadowColor =
-          '#ffffff';
-
-        ctx.strokeStyle =
-          '#ffffff';
-
+        ctx.shadowColor = '#ffffff';
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
-
         ctx.stroke();
 
         /*
-         * Player head
+         * Player head (Narky Capsule Character)
          */
-        ctx.shadowBlur =
-          boostActive
-            ? 20
-            : 12;
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.angle + Math.PI / 2);
 
-        ctx.shadowColor =
-          '#00f5d4';
+        const capW = boostActive ? 14 : 12;
+        const capH = boostActive ? 28 : 24;
+        const capR = capW / 2;
 
-        ctx.fillStyle =
-          '#ffffff';
+        ctx.shadowBlur = boostActive ? 20 : 12;
+        ctx.shadowColor = boostActive ? '#26fedc' : player.color;
+        ctx.fillStyle = player.color;
 
         ctx.beginPath();
-
-        ctx.arc(
-          player.x,
-          player.y,
-          boostActive
-            ? 6.5
-            : 5.5,
-          0,
-          Math.PI * 2
-        );
-
+        ctx.roundRect(-capW / 2, -capH / 2, capW, capH, capR);
         ctx.fill();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.roundRect(-capW / 2 + 2, -capH / 2 + 2, capW - 4, capH / 2, capR);
+        ctx.fill();
+
+        const eyeY = -capH / 4;
+        const eyeOffset = capW / 3;
+        const eyeRadius = capW / 5;
+        const pupilRadius = eyeRadius / 2;
+
+        [-eyeOffset, eyeOffset].forEach((offsetX) => {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(offsetX, eyeY, eyeRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(offsetX, eyeY, pupilRadius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.restore();
 
         /*
          * Callsign
          */
         ctx.shadowBlur = 0;
-
-        ctx.fillStyle =
-          '#00f5d4';
-
-        ctx.font =
-          '700 10px "JetBrains Mono", monospace';
-
-        ctx.fillText(
-          callsign ||
-            'CYBER_GHOST',
-          player.x - 18,
-          player.y - 14
-        );
+        ctx.fillStyle = '#00f5d4';
+        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.fillText(callsign || 'CYBER_GHOST', player.x - 18, player.y - 16);
 
         ctx.restore();
       }
@@ -2111,234 +1313,102 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       /*
        * PARTICLES
        */
-      for (
-        let i =
-          particles.length - 1;
-        i >= 0;
-        i--
-      ) {
-        const p =
-          particles[i];
-
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
         p.x += p.vx;
-
         p.y += p.vy;
-
         p.life -= p.decay;
 
-        if (
-          p.life <= 0
-        ) {
-          particles.splice(
-            i,
-            1
-          );
-
+        if (p.life <= 0) {
+          particles.splice(i, 1);
           continue;
         }
 
         ctx.save();
-
-        ctx.globalAlpha =
-          p.life;
-
-        ctx.fillStyle =
-          p.color;
-
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
         ctx.shadowBlur = 8;
-
-        ctx.shadowColor =
-          p.color;
-
+        ctx.shadowColor = p.color;
         ctx.beginPath();
-
-        ctx.arc(
-          p.x,
-          p.y,
-          p.size *
-            p.life,
-          0,
-          Math.PI * 2
-        );
-
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
         ctx.fill();
-
         ctx.restore();
       }
 
       /*
        * FLOATING TEXT
        */
-      for (
-        let i =
-          floatingTexts.length - 1;
-        i >= 0;
-        i--
-      ) {
-        const ft =
-          floatingTexts[i];
-
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
         ft.y -= 0.8;
-
         ft.life -= ft.decay;
 
-        if (
-          ft.life <= 0
-        ) {
-          floatingTexts.splice(
-            i,
-            1
-          );
-
+        if (ft.life <= 0) {
+          floatingTexts.splice(i, 1);
           continue;
         }
 
         ctx.save();
-
-        ctx.globalAlpha =
-          ft.life;
-
-        ctx.font =
-          '700 11px "JetBrains Mono", monospace';
-
-        ctx.fillStyle =
-          ft.color;
-
+        ctx.globalAlpha = ft.life;
+        ctx.font = '700 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = ft.color;
         ctx.shadowBlur = 8;
-
-        ctx.shadowColor =
-          ft.color;
-
-        ctx.fillText(
-          ft.text,
-          ft.x - 10,
-          ft.y
-        );
-
+        ctx.shadowColor = ft.color;
+        ctx.fillText(ft.text, ft.x - 10, ft.y);
         ctx.restore();
       }
+
+      ctx.restore(); // Restore context out of world/camera coordinates space
 
       /*
        * ROSTER UPDATE
        */
-      if (
-        frame % 30 === 0 &&
-        !isPausedRef.current
-      ) {
+      if (frame % 30 === 0 && !isPausedRef.current) {
         try {
-          setRoster((prev) => {
-            const botEntries =
-              bots.map((b) => ({
+          setRoster(() => {
+            const sortedBots = [...bots]
+              .sort((a, b) => b.score - a.score)
+              .map((b) => ({
                 name: b.name,
-                score: Math.floor(
-                  b.score || 0
-                ),
+                score: Math.floor(b.score || 0),
               }));
 
-            const nonPlayerPrev =
-              prev
-                .filter(
-                  (p) => !p.isPlayer
-                )
-                .map((p) => ({
-                  name: p.name,
-                  score: p.score,
-                }));
-
-            const filler =
-              nonPlayerPrev.slice(
-                botEntries.length
-              );
-
             const playerEntry = {
-              name:
-                callsign ||
-                'CYBER_GHOST',
-
-              score: Math.floor(
-                localScore
-              ),
-
+              name: callsign || 'CYBER_GHOST',
+              score: Math.floor(localScore),
               isPlayer: true,
             };
 
-            const combined = [
-              ...botEntries,
-              ...filler,
-              playerEntry,
-            ].slice(0, 6);
+            const combined = [...sortedBots, playerEntry]
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 6);
 
             return combined;
           });
         } catch {}
       }
 
-      animFrameId =
-        requestAnimationFrame(
-          render
-        );
+      animFrameId = requestAnimationFrame(render);
     };
 
-    animFrameId =
-      requestAnimationFrame(
-        render
-      );
+    animFrameId = requestAnimationFrame(render);
 
     /*
      * CLEANUP
      */
     return () => {
-      cancelAnimationFrame(
-        animFrameId
-      );
-
+      cancelAnimationFrame(animFrameId);
       observer.disconnect();
-
-      container.removeEventListener(
-        'mousemove',
-        onMouseMove
-      );
-
-      container.removeEventListener(
-        'touchmove',
-        onTouchMove
-      );
-
-      container.removeEventListener(
-        'mousedown',
-        onMouseDown
-      );
-
-      window.removeEventListener(
-        'mouseup',
-        onMouseUp
-      );
-
-      container.removeEventListener(
-        'touchstart',
-        onTouchStart
-      );
-
-      window.removeEventListener(
-        'touchend',
-        onTouchEnd
-      );
-
-      window.removeEventListener(
-        'keydown',
-        onKeyDown
-      );
-
-      window.removeEventListener(
-        'keyup',
-        onKeyUp
-      );
+      container.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
     };
-  }, [
-    callsign,
-    onKillsUpdate,
-    onScoreUpdate,
-  ]);
+  }, [callsign, onKillsUpdate, onScoreUpdate]);
 
   return (
     <div
@@ -2365,10 +1435,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }
       `}
     >
-      {/* =========================================================
-          GAME CANVAS
-      ========================================================== */}
-
+      {/* GAME CANVAS */}
       <canvas
         ref={canvasRef}
         className="
@@ -2382,20 +1449,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         "
       />
 
-      {/* =========================================================
-          MOBILE CONTROLLER
-
-          IMPORTANT:
-          BOOST = LEFT
-          JOYSTICK = RIGHT
-      ========================================================== */}
-
+      {/* MOBILE CONTROLLER */}
       <div
-        className={
-          `absolute inset-x-0 z-30 pointer-events-none px-4 ${
-            isFullscreen ? 'bottom-12 md:bottom-12' : 'bottom-0 md:bottom-2'
-          }`
-        }
+        className={`absolute inset-x-0 z-30 pointer-events-none px-4 ${
+          isFullscreen ? 'bottom-12 md:bottom-12' : 'bottom-0 md:bottom-2'
+        }`}
         style={{
           paddingBottom: isFullscreen
             ? 'calc(48px + env(safe-area-inset-bottom))'
@@ -2403,17 +1461,8 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }}
         aria-label="Mobile game controls"
       >
-        <div
-          className="
-            relative
-            w-full
-            h-[104px]
-          "
-        >
-          {/* =====================================================
-              BOOST BUTTON - LEFT
-          ====================================================== */}
-
+        <div className="relative w-full h-[104px]">
+          {/* BOOST BUTTON - LEFT */}
           <button
             data-mobile-control="true"
             type="button"
@@ -2422,36 +1471,25 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               absolute
               left-0
               bottom-3
-
               w-[78px]
               h-[78px]
-
               rounded-full
-
               border
               border-[#f9bd22]/60
-
               bg-[#1b1913]/90
-
               text-[#ffdf9f]
-
               font-mono
               text-[10px]
               font-bold
               tracking-widest
-
               shadow-[0_0_20px_rgba(249,189,34,0.18)]
-
               active:scale-95
               active:bg-[#2b2216]
-
               touch-none
               select-none
-
               flex
               items-center
               justify-center
-
               z-40
             "
             onPointerDown={(e) => {
@@ -2459,259 +1497,119 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               e.stopPropagation();
 
               try {
-                e.currentTarget.setPointerCapture(
-                  e.pointerId
-                );
+                e.currentTarget.setPointerCapture(e.pointerId);
               } catch {}
 
-              if (
-                !mobileInputRef
-                  .current
-                  .boost
-              ) {
+              if (!mobileInputRef.current.boost) {
                 sounds.playBoostSound();
               }
 
-              mobileInputRef.current.boost =
-                true;
+              mobileInputRef.current.boost = true;
             }}
             onPointerUp={(e) => {
               e.preventDefault();
               e.stopPropagation();
 
-              mobileInputRef.current.boost =
-                false;
+              mobileInputRef.current.boost = false;
 
               try {
-                e.currentTarget.releasePointerCapture(
-                  e.pointerId
-                );
+                e.currentTarget.releasePointerCapture(e.pointerId);
               } catch {}
             }}
             onPointerCancel={() => {
-              mobileInputRef.current.boost =
-                false;
+              mobileInputRef.current.boost = false;
             }}
           >
             BOOST
           </button>
 
-          {/* =====================================================
-              JOYSTICK - RIGHT
-          ====================================================== */}
-
+          {/* JOYSTICK - RIGHT */}
           <div
             data-mobile-control="true"
             className="
               absolute
               right-0
               bottom-0
-
               w-[104px]
               h-[104px]
-
               rounded-full
-
               border
               border-[#00f5d4]/35
-
               bg-[#07111a]/80
-
               backdrop-blur-sm
-
               shadow-[0_0_22px_rgba(0,245,212,0.12)]
-
               pointer-events-auto
-
               touch-none
               select-none
-
               z-40
             "
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              e.currentTarget.setPointerCapture(e.pointerId);
 
-              e.currentTarget.setPointerCapture(
-                e.pointerId
-              );
+              const el = e.currentTarget;
+              const r = el.getBoundingClientRect();
 
-              const el =
-                e.currentTarget;
+              const updateJoystick = (clientX: number, clientY: number) => {
+                const cx = r.left + r.width / 2;
+                const cy = r.top + r.height / 2;
+                const max = r.width * 0.36;
 
-              const r =
-                el.getBoundingClientRect();
+                let dx = clientX - cx;
+                let dy = clientY - cy;
+                const len = Math.hypot(dx, dy) || 1;
+                const amount = Math.min(1, len / max);
 
-              const updateJoystick = (
-                clientX: number,
-                clientY: number
-              ) => {
-                const cx =
-                  r.left +
-                  r.width / 2;
+                dx = (dx / len) * amount;
+                dy = (dy / len) * amount;
 
-                const cy =
-                  r.top +
-                  r.height / 2;
-
-                const max =
-                  r.width * 0.36;
-
-                let dx =
-                  clientX - cx;
-
-                let dy =
-                  clientY - cy;
-
-                const len =
-                  Math.hypot(
-                    dx,
-                    dy
-                  ) || 1;
-
-                const amount =
-                  Math.min(
-                    1,
-                    len / max
-                  );
-
-                dx =
-                  (dx / len) *
-                  amount;
-
-                dy =
-                  (dy / len) *
-                  amount;
-
-                mobileInputRef.current.active =
-                  amount > 0.05;
-
-                mobileInputRef.current.dx =
-                  dx;
-
-                mobileInputRef.current.dy =
-                  dy;
+                mobileInputRef.current.active = amount > 0.05;
+                mobileInputRef.current.dx = dx;
+                mobileInputRef.current.dy = dy;
               };
 
-              updateJoystick(
-                e.clientX,
-                e.clientY
-              );
-
-              setHintVisible(
-                false
-              );
+              updateJoystick(e.clientX, e.clientY);
+              setHintVisible(false);
             }}
             onPointerMove={(e) => {
-              if (
-                !e.currentTarget.hasPointerCapture(
-                  e.pointerId
-                )
-              ) {
-                return;
-              }
+              if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
 
-              const r =
-                e.currentTarget.getBoundingClientRect();
+              const r = e.currentTarget.getBoundingClientRect();
+              const cx = r.left + r.width / 2;
+              const cy = r.top + r.height / 2;
+              const max = r.width * 0.36;
 
-              const cx =
-                r.left +
-                r.width / 2;
+              let dx = e.clientX - cx;
+              let dy = e.clientY - cy;
+              const len = Math.hypot(dx, dy) || 1;
+              const amount = Math.min(1, len / max);
 
-              const cy =
-                r.top +
-                r.height / 2;
+              dx = (dx / len) * amount;
+              dy = (dy / len) * amount;
 
-              const max =
-                r.width * 0.36;
-
-              let dx =
-                e.clientX - cx;
-
-              let dy =
-                e.clientY - cy;
-
-              const len =
-                Math.hypot(
-                  dx,
-                  dy
-                ) || 1;
-
-              const amount =
-                Math.min(
-                  1,
-                  len / max
-                );
-
-              dx =
-                (dx / len) *
-                amount;
-
-              dy =
-                (dy / len) *
-                amount;
-
-              mobileInputRef.current.active =
-                amount > 0.05;
-
-              mobileInputRef.current.dx =
-                dx;
-
-              mobileInputRef.current.dy =
-                dy;
+              mobileInputRef.current.active = amount > 0.05;
+              mobileInputRef.current.dx = dx;
+              mobileInputRef.current.dy = dy;
             }}
             onPointerUp={(e) => {
               e.preventDefault();
-
-              mobileInputRef.current.active =
-                false;
-
-              mobileInputRef.current.dx =
-                0;
-
-              mobileInputRef.current.dy =
-                -1;
+              mobileInputRef.current.active = false;
+              mobileInputRef.current.dx = 0;
+              mobileInputRef.current.dy = -1;
 
               try {
-                e.currentTarget.releasePointerCapture(
-                  e.pointerId
-                );
+                e.currentTarget.releasePointerCapture(e.pointerId);
               } catch {}
             }}
             onPointerCancel={() => {
-              mobileInputRef.current.active =
-                false;
-
-              mobileInputRef.current.dx =
-                0;
-
-              mobileInputRef.current.dy =
-                -1;
+              mobileInputRef.current.active = false;
+              mobileInputRef.current.dx = 0;
+              mobileInputRef.current.dy = -1;
             }}
           >
-            {/* Outer ring */}
-            <div
-              className="
-                absolute
-                inset-2
-                rounded-full
-                border
-                border-[#00f5d4]/15
-              "
-            />
-
-            {/* Inner ring */}
-            <div
-              className="
-                absolute
-                inset-5
-                rounded-full
-                border
-                border-[#00f5d4]/10
-              "
-            />
-
-            {/* Center joystick */}
+            <div className="absolute inset-2 rounded-full border border-[#00f5d4]/15" />
+            <div className="absolute inset-5 rounded-full border border-[#00f5d4]/10" />
             <div
               className="
                 absolute
@@ -2719,32 +1617,19 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
                 top-1/2
                 -translate-x-1/2
                 -translate-y-1/2
-
                 w-12
                 h-12
-
                 rounded-full
-
                 border
                 border-[#00f5d4]/70
-
                 bg-[#0b2027]/95
-
                 shadow-[0_0_14px_rgba(0,245,212,0.25)]
-
                 flex
                 items-center
                 justify-center
               "
             >
-              <span
-                className="
-                  text-[8px]
-                  font-mono
-                  tracking-widest
-                  text-[#83948f]
-                "
-              >
+              <span className="text-[8px] font-mono tracking-widest text-[#83948f]">
                 MOVE
               </span>
             </div>
@@ -2752,10 +1637,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       </div>
 
-      {/* =========================================================
-          MOBILE CONTROL HINT
-      ========================================================== */}
-
+      {/* MOBILE CONTROL HINT */}
       {hintVisible && (
         <div
           className="
@@ -2788,21 +1670,16 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       )}
 
-      {/* =========================================================
-          DEATH MODAL
-      ========================================================== */}
-
+      {/* DEATH MODAL */}
       {showDeathModal && (
         <div
           className="
             absolute
             inset-0
             z-40
-
             flex
             items-center
             justify-center
-
             bg-black/40
           "
         >
@@ -2815,47 +1692,20 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               p-6
               w-[320px]
               text-center
-
               shadow-[0_10px_30px_rgba(0,0,0,0.8)]
             "
           >
-            <div
-              className="
-                font-mono
-                text-[14px]
-                font-bold
-                text-[#ffb2b7]
-              "
-            >
+            <div className="font-mono text-[14px] font-bold text-[#ffb2b7]">
               You Were Eliminated
             </div>
 
-            <div
-              className="
-                font-mono
-                text-[12px]
-                text-[#dce3f0]
-                mt-2
-              "
-            >
-              Final Score:{' '}
-              {lastScore?.toLocaleString() ||
-                0}
+            <div className="font-mono text-[12px] text-[#dce3f0] mt-2">
+              Final Score: {lastScore?.toLocaleString() || 0}
             </div>
 
-            <div
-              className="
-                mt-4
-                flex
-                items-center
-                justify-center
-                gap-3
-              "
-            >
+            <div className="mt-4 flex items-center justify-center gap-3">
               <button
-                onClick={
-                  shareThenRestart
-                }
+                onClick={shareThenRestart}
                 className="
                   px-4
                   py-2
@@ -2887,38 +1737,23 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               </button>
             </div>
 
-            <div
-              className="
-                text-[10px]
-                text-[#83948f]
-                mt-3
-              "
-            >
-              Share will include your
-              site and X handle.
+            <div className="text-[10px] text-[#83948f] mt-3">
+              Share will include your site and X handle.
             </div>
           </div>
         </div>
       )}
 
-
-      {/* =========================================================
-          TOP HUD
-      ========================================================== */}
-
+      {/* TOP HUD */}
       <div
         className="
           relative
           z-10
-
           w-full
-
           flex
           items-start
           justify-between
-
           gap-4
-
           pointer-events-none
         "
       >
@@ -2926,182 +1761,64 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         <div
           className="
             pointer-events-auto
-
             bg-[#0d1722]/90
-
             border
             border-[#00f5d4]/40
-
             rounded-lg
-
             p-2
             md:p-3
-
             shadow-[0_0_15px_rgba(0,245,212,0.15)]
-
             flex
             flex-col
-
             min-w-[100px]
             md:min-w-[130px]
-
             backdrop-blur-md
           "
         >
-          <span
-            className="
-              font-mono
-              text-[8px]
-              md:text-[9px]
-              text-[#83948f]
-              tracking-widest
-              uppercase
-            "
-          >
+          <span className="font-mono text-[8px] md:text-[9px] text-[#83948f] tracking-widest uppercase">
             SCORE
           </span>
 
-          <span
-            className="
-              font-mono
-              text-[18px]
-              md:text-[28px]
-              leading-tight
-              font-bold
-              text-[#d7fff3]
-
-              my-0.5
-
-              tracking-tight
-
-              drop-shadow-[0_0_8px_rgba(0,245,212,0.4)]
-            "
-          >
+          <span className="font-mono text-[18px] md:text-[28px] leading-tight font-bold text-[#d7fff3] my-0.5 tracking-tight drop-shadow-[0_0_8px_rgba(0,245,212,0.4)]">
             {score.toLocaleString()}
           </span>
 
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-
-              text-[9px]
-              md:text-[10px]
-
-              font-mono
-              text-[#83948f]
-
-              pt-1
-
-              border-t
-              border-[#3a4a46]/40
-
-              mt-1
-            "
-          >
+          <div className="flex items-center justify-between text-[9px] md:text-[10px] font-mono text-[#83948f] pt-1 border-t border-[#3a4a46]/40 mt-1">
             <span>KILLS</span>
-
-            <span
-              className="
-                text-[#dce3f0]
-                font-bold
-              "
-            >
-              {kills}
-            </span>
+            <span className="text-[#dce3f0] font-bold">{kills}</span>
           </div>
 
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-
-              text-[9px]
-              md:text-[10px]
-
-              font-mono
-
-              text-[#83948f]
-
-              mt-0.5
-            "
-          >
-            <span>
-              BEST TODAY
-            </span>
-
-            <span
-              className="
-                text-[#00f5d4]
-                font-bold
-              "
-            >
-              {bestToday.toLocaleString()}
-            </span>
+          <div className="flex items-center justify-between text-[9px] md:text-[10px] font-mono text-[#83948f] mt-0.5">
+            <span>BEST TODAY</span>
+            <span className="text-[#00f5d4] font-bold">{bestToday.toLocaleString()}</span>
           </div>
         </div>
 
         {/* TOP RIGHT */}
-        <div
-          className="
-            pointer-events-auto
-
-            flex
-            flex-col
-            items-end
-
-            gap-2
-          "
-        >
+        <div className="pointer-events-auto flex flex-col items-end gap-2">
           {/* FULLSCREEN */}
-          <div
-            className="
-              pointer-events-auto
-            "
-          >
+          <div className="pointer-events-auto">
             {onToggleFullscreen && (
               <button
                 onClick={() => {
                   sounds.playBeep(600);
-
                   onToggleFullscreen();
                 }}
                 className="
                   text-[#83948f]
                   hover:text-[#00f5d4]
-
                   transition-colors
-
                   cursor-pointer
-
                   p-1
-
                   rounded
-
                   hover:bg-[#00f5d4]/10
                 "
-                title={
-                  isFullscreen
-                    ? 'Exit Fullscreen'
-                    : 'Toggle Fullscreen Arena'
-                }
+                title={isFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen Arena'}
               >
                 {isFullscreen ? (
-                  <Minimize2
-                    className="
-                      w-4
-                      h-4
-                    "
-                  />
+                  <Minimize2 className="w-4 h-4" />
                 ) : (
-                  <Maximize2
-                    className="
-                      w-4
-                      h-4
-                    "
-                  />
+                  <Maximize2 className="w-4 h-4" />
                 )}
               </button>
             )}
@@ -3112,57 +1829,24 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             className="
               hidden
               md:flex
-
               bg-[#26131c]/90
-
               border
               border-[#ffb2b7]/40
-
               rounded-full
-
               px-3
               py-1
-
               items-center
               gap-1.5
-
               shadow-[0_0_12px_rgba(255,178,183,0.25)]
-
               backdrop-blur-md
             "
-            style={{
-              borderColor:
-                alertColor + '60',
-            }}
+            style={{ borderColor: alertColor + '60' }}
           >
             <span
-              className="
-                w-2
-                h-2
-                rounded-full
-
-                animate-pulse
-
-                shadow-[0_0_6px_#ffb2b7]
-              "
-              style={{
-                backgroundColor:
-                  alertColor,
-              }}
+              className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_6px_#ffb2b7]"
+              style={{ backgroundColor: alertColor }}
             />
-
-            <span
-              className="
-                font-mono
-                text-[9px]
-                font-bold
-                tracking-wider
-                uppercase
-              "
-              style={{
-                color: alertColor,
-              }}
-            >
+            <span className="font-mono text-[9px] font-bold tracking-wider uppercase" style={{ color: alertColor }}>
               {alertText}
             </span>
           </div>
@@ -3172,122 +1856,47 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             className="
               hidden
               md:flex
-
               relative
-
               bg-[#0d1722]/90
-
               border
               border-[#00f5d4]/40
-
               rounded-lg
-
               p-3
-
               shadow-[0_0_15px_rgba(0,245,212,0.15)]
-
               min-w-[160px]
-
               flex-col
-
               backdrop-blur-md
             "
           >
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-
-                text-[9px]
-
-                font-mono
-                text-[#83948f]
-
-                uppercase
-
-                pb-1
-                mb-1
-
-                border-b
-                border-[#3a4a46]/40
-              "
-            >
-              <span
-                className="
-                  tracking-wider
-                "
-              >
-                LIVE MATCH
-              </span>
+            <div className="flex items-center justify-between text-[9px] font-mono text-[#83948f] uppercase pb-1 mb-1 border-b border-[#3a4a46]/40">
+              <span className="tracking-wider">LIVE MATCH</span>
             </div>
 
-            <div
-              className="
-                flex
-                flex-col
-                gap-0.5
-
-                font-mono
-                text-[10px]
-              "
-            >
-              {roster.map(
-                (
-                  item,
-                  idx
-                ) => (
-                  <div
-                    key={idx}
-                    className={`
-                      flex
-                      items-center
-                      justify-between
-
-                      ${
-                        item.isPlayer
-                          ? 'text-[#00f5d4] font-bold pt-0.5 border-t border-[#3a4a46]/30'
-                          : 'text-[#dce3f0]'
-                      }
-                    `}
-                  >
-                    <span>
-                      <strong
-                        className={
-                          item.isPlayer
-                            ? 'text-[#00f5d4] mr-1'
-                            : 'text-[#83948f] mr-1'
-                        }
-                      >
-                        {(
-                          idx + 1
-                        )
-                          .toString()
-                          .padStart(
-                            2,
-                            '0'
-                          )}
-                      </strong>{' '}
-                      {item.name}
-                    </span>
-
-                    <span
-                      className={
-                        item.isPlayer
-                          ? 'text-[#00f5d4]'
-                          : 'text-[#00dfc1] font-bold'
-                      }
-                    >
-                      {item.score}
-                    </span>
-                  </div>
-                )
-              )}
+            <div className="flex flex-col gap-0.5 font-mono text-[10px]">
+              {roster.map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between ${
+                    item.isPlayer
+                      ? 'text-[#00f5d4] font-bold pt-0.5 border-t border-[#3a4a46]/30'
+                      : 'text-[#dce3f0]'
+                  }`}
+                >
+                  <span>
+                    <strong className={item.isPlayer ? 'text-[#00f5d4] mr-1' : 'text-[#83948f] mr-1'}>
+                      {(idx + 1).toString().padStart(2, '0')}
+                    </strong>{' '}
+                    {item.name}
+                  </span>
+                  <span className={item.isPlayer ? 'text-[#00f5d4]' : 'text-[#00dfc1] font-bold'}>
+                    {item.score}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 };

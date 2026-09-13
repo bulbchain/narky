@@ -68,12 +68,54 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   isFullscreen = false,
   onToggleFullscreen,
 }) => {
+  const restartRef = React.useRef<() => void>(() => {});
+  const isPausedRef = React.useRef(false);
+  const [shareAvailable, setShareAvailable] = React.useState(false);
+  const [lastScore, setLastScore] = React.useState<number | null>(null);
+  const [showDeathModal, setShowDeathModal] = React.useState(false);
+
+  // Customize these to your actual site and X/Twitter profile
+  const WEBSITE_URL = 'https://your-website.example';
+  const TWITTER_URL = 'https://x.com/yourhandle';
+
+  const shareOnX = useCallback(() => {
+    if (lastScore == null) return;
+    const text = `I scored ${lastScore} points in PumpFun Arena! Join me at ${WEBSITE_URL} — follow ${TWITTER_URL} to play.`;
+    const intent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+    window.open(intent, '_blank', 'noopener');
+  }, [lastScore]);
+
+  const shareThenRestart = useCallback(() => {
+    shareOnX();
+    setShowDeathModal(false);
+    try {
+      restartRef.current();
+    } catch (e) {
+      // fallback: call restartGame if available
+      try {
+        // @ts-ignore
+        restartGame();
+      } catch {}
+    }
+  }, [shareOnX]);
+
+  const playAgain = useCallback(() => {
+    setShowDeathModal(false);
+    try {
+      restartRef.current();
+    } catch (e) {
+      try {
+        // @ts-ignore
+        restartGame();
+      } catch {}
+    }
+  }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // HUD States
-  const [score, setScore] = useState<number>(5170);
-  const [kills, setKills] = useState<number>(6);
+  const [score, setScore] = useState<number>(0);
+  const [kills, setKills] = useState<number>(0);
   const [bestToday, setBestToday] = useState<number>(5245);
   const [alertText, setAlertText] = useState<string>('TRAIL COLLISION');
   const [alertColor, setAlertColor] = useState<string>('#ffb2b7');
@@ -99,10 +141,16 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   // Restart function
   const restartGame = useCallback(() => {
     sounds.playBeep(440);
-    setScore(5170);
-    setKills(6);
-    if (onKillsUpdate) onKillsUpdate(6);
-    if (onScoreUpdate) onScoreUpdate(5170);
+    // call effect-local restart if available to reset in-loop vars
+    try {
+      restartRef.current();
+    } catch (e) {
+      // fallback to updating React state
+      setScore(0);
+      setKills(0);
+      if (onKillsUpdate) onKillsUpdate(0);
+      if (onScoreUpdate) onScoreUpdate(0);
+    }
   }, [onKillsUpdate, onScoreUpdate]);
 
   useEffect(() => {
@@ -258,8 +306,41 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     let isBoosting = false;
     const mouse = { x: width / 2, y: height / 2, active: false };
     let frame = 0;
-    let localScore = 5170;
-    let localKills = 6;
+    let localScore = 0;
+    let localKills = 0;
+
+    // expose restart to outer scope so UI button can reset in-loop variables
+    restartRef.current = () => {
+      localScore = 0;
+      localKills = 0;
+      // reset player
+      player.x = width * 0.5;
+      player.y = height * 0.6;
+      player.angle = -Math.PI / 2;
+      player.trail = [];
+      isBoosting = false;
+
+      // respawn bots and clear trails
+      bots.forEach((b) => {
+        b.x = Math.random() * (width - 80) + 40;
+        b.y = Math.random() * (height - 80) + 40;
+        b.trail = [];
+      });
+
+      // reset orbs
+      orbs = Array.from({ length: 65 }, () => createOrb());
+
+      // sync React state / HUD
+      setScore(0);
+      setKills(0);
+      if (onKillsUpdate) onKillsUpdate(0);
+      if (onScoreUpdate) onScoreUpdate(0);
+      // clear share availability and any modal
+      setShareAvailable(false);
+      setLastScore(null);
+      setShowDeathModal(false);
+      isPausedRef.current = false;
+    };
 
     // Event listeners
     const onMouseMove = (e: MouseEvent) => {
@@ -387,9 +468,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       // Update & Draw Orbs
       for (let i = 0; i < orbs.length; i++) {
         const orb = orbs[i];
-        orb.x += orb.vx;
-        orb.y += orb.vy;
-        orb.pulse += 0.05;
+        if (!isPausedRef.current) {
+          orb.x += orb.vx;
+          orb.y += orb.vy;
+          orb.pulse += 0.05;
+        }
 
         // Wrap boundaries
         if (orb.x < 8) orb.x = width - 8;
@@ -411,44 +494,63 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       // Player Steering
       const currentSpeed = isBoosting ? player.boostSpeed : player.baseSpeed;
-      if (mouse.active) {
-        const targetAngle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-        let diff = targetAngle - player.angle;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        player.angle += diff * (isBoosting ? 0.12 : 0.08);
+      if (!isPausedRef.current) {
+        if (mouse.active) {
+          const targetAngle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+          let diff = targetAngle - player.angle;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          player.angle += diff * (isBoosting ? 0.12 : 0.08);
+        }
+
+        player.x += Math.cos(player.angle) * currentSpeed;
+        player.y += Math.sin(player.angle) * currentSpeed;
       }
 
-      player.x += Math.cos(player.angle) * currentSpeed;
-      player.y += Math.sin(player.angle) * currentSpeed;
-
-      // Soft bounce on borders
+      // Boundary hazard for player: shatter on impact and respawn
       const margin = 16;
-      if (player.x < margin) {
-        player.x = margin;
-        player.angle = Math.PI - player.angle;
-      }
-      if (player.x > width - margin) {
-        player.x = width - margin;
-        player.angle = Math.PI - player.angle;
-      }
-      if (player.y < margin) {
-        player.y = margin;
-        player.angle = -player.angle;
-      }
-      if (player.y > height - margin) {
-        player.y = height - margin;
-        player.angle = -player.angle;
+      if (player.x < margin || player.x > width - margin || player.y < margin || player.y > height - margin) {
+        // Shatter player
+        emitSparks(player.x, player.y, player.color, 35, 3);
+        addScorePopup(player.x, player.y - 20, `CRASHED! -200`, '#ffb2b7');
+        sounds.playShatter();
+
+        setAlertText('YOU CRASHED');
+        setAlertColor('#ffb2b7');
+        setTimeout(() => {
+          setAlertText('TRAIL COLLISION');
+        }, 2600);
+
+        // Apply penalty and sync HUD
+        localScore = Math.max(0, localScore - 200);
+        setScore(Math.floor(localScore));
+        setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+        if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+
+        // Respawn player near center and clear trail
+        player.x = width * 0.5;
+        player.y = height * 0.6;
+        player.angle = -Math.PI / 2;
+        player.trail = [];
+        isBoosting = false;
+        // allow sharing this run's score and show modal
+        isPausedRef.current = true;
+        setLastScore(Math.floor(localScore));
+        setShareAvailable(true);
+        setShowDeathModal(true);
+        setTimeout(() => setShareAvailable(false), 15000);
       }
 
       // Add trail point
-      player.trail.unshift({ x: player.x, y: player.y });
-      if (player.trail.length > player.maxTrail) {
-        player.trail.pop();
+      if (!isPausedRef.current) {
+        player.trail.unshift({ x: player.x, y: player.y });
+        if (player.trail.length > player.maxTrail) {
+          player.trail.pop();
+        }
       }
 
       // Boost emission & score bleed
-      if (isBoosting) {
+      if (!isPausedRef.current && isBoosting) {
         localScore = Math.max(10, localScore - 0.2);
         if (frame % 3 === 0) {
           emitSparks(player.x, player.y, '#00f5d4', 2, 1.2);
@@ -463,22 +565,25 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         const dist = Math.hypot(dx, dy);
 
         if (dist < player.thickness + orb.radius + 6) {
-          localScore += orb.value;
-          player.maxTrail = Math.min(80, player.maxTrail + 1);
-          emitSparks(orb.x, orb.y, orb.color, 8, 1.2);
-          addScorePopup(orb.x, orb.y - 10, `+${orb.value}`, orb.color);
-          sounds.playOrbChime(orb.value);
-          orbs[i] = createOrb();
+          if (!isPausedRef.current) {
+            localScore += orb.value;
+            player.maxTrail = Math.min(80, player.maxTrail + 1);
+            emitSparks(orb.x, orb.y, orb.color, 8, 1.2);
+            addScorePopup(orb.x, orb.y - 10, `+${orb.value}`, orb.color);
+            sounds.playOrbChime(orb.value);
+            orbs[i] = createOrb();
 
-          // Sync HUD states
-          setScore(Math.floor(localScore));
-          setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
-          if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+            // Sync HUD states
+            setScore(Math.floor(localScore));
+            setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+            if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+          }
         }
       }
 
       // Update & Move Bots
       bots.forEach((bot) => {
+        if (isPausedRef.current) return;
         // Simple steering towards nearest orb
         let closestOrb: Orb | null = null;
         let minDist = 180;
@@ -503,9 +608,32 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         bot.x += Math.cos(bot.angle) * bot.speed;
         bot.y += Math.sin(bot.angle) * bot.speed;
 
-        // Bot boundary turn
-        if (bot.x < 24 || bot.x > width - 24) bot.angle = Math.PI - bot.angle;
-        if (bot.y < 24 || bot.y > height - 24) bot.angle = -bot.angle;
+        // Bot boundary hazard: destroy bot when it hits arena edge
+        if (bot.x < 24 || bot.x > width - 24 || bot.y < 24 || bot.y > height - 24) {
+          // Shatter bot!
+          localKills += 1;
+          localScore += 420;
+          emitSparks(bot.x, bot.y, bot.color, 35, 3);
+          addScorePopup(bot.x, bot.y - 20, `${bot.name} ELIMINATED! +420`, '#ffb2b7');
+          sounds.playShatter();
+
+          setAlertText(`${bot.name} ELIMINATED`);
+          setAlertColor('#ffb2b7');
+          setTimeout(() => {
+            setAlertText('TRAIL COLLISION');
+          }, 2600);
+
+          setKills(localKills);
+          setScore(Math.floor(localScore));
+          setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+          if (onKillsUpdate) onKillsUpdate(localKills);
+          if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+
+          // Respawn bot away from the edge
+          bot.x = Math.random() * (width - 80) + 40;
+          bot.y = Math.random() * (height - 80) + 40;
+          bot.trail = [];
+        }
 
         bot.trail.unshift({ x: bot.x, y: bot.y });
         if (bot.trail.length > bot.maxTrail) bot.trail.pop();
@@ -546,6 +674,46 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             bot.x = Math.random() * (width - 80) + 40;
             bot.y = Math.random() * (height - 80) + 40;
             bot.trail = [];
+            break;
+          }
+        }
+
+        // Check if bot cut player's head
+        for (let t = 6; t < bot.trail.length; t++) {
+          const pd = Math.hypot(bot.trail[t].x - player.x, bot.trail[t].y - player.y);
+          if (pd < player.thickness + 5) {
+            // Shatter player
+            emitSparks(player.x, player.y, player.color, 35, 3);
+            addScorePopup(player.x, player.y - 20, `KILLED BY ${bot.name}`, '#ffb2b7');
+            sounds.playShatter();
+
+            setAlertText(`KILLED BY ${bot.name}`);
+            setAlertColor('#ffb2b7');
+            setTimeout(() => {
+              setAlertText('TRAIL COLLISION');
+            }, 2600);
+
+            // Award bot and penalize player
+            bot.score = (bot.score || 0) + 420;
+            localScore = Math.max(0, localScore - 200);
+
+            // Sync HUD
+            setScore(Math.floor(localScore));
+            setBestToday((prev) => Math.max(prev, Math.floor(localScore)));
+            if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
+
+            // Respawn player near center
+            player.x = width * 0.5;
+            player.y = height * 0.6;
+            player.angle = -Math.PI / 2;
+            player.trail = [];
+            isBoosting = false;
+            // allow sharing this run's score and show modal
+            isPausedRef.current = true;
+            setLastScore(Math.floor(localScore));
+            setShareAvailable(true);
+            setShowDeathModal(true);
+            setTimeout(() => setShareAvailable(false), 15000);
             break;
           }
         }
@@ -674,6 +842,20 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.restore();
       }
 
+      // Update HUD roster periodically to reflect live scores
+      if (frame % 30 === 0 && !isPausedRef.current) {
+        try {
+          setRoster((prev) => {
+            const botEntries = bots.map((b) => ({ name: b.name, score: Math.floor(b.score || 0) }));
+            const nonPlayerPrev = prev.filter((p) => !p.isPlayer).map((p) => ({ name: p.name, score: p.score }));
+            const filler = nonPlayerPrev.slice(botEntries.length);
+            const playerEntry = { name: callsign || 'CYBER_GHOST', score: Math.floor(localScore), isPlayer: true } as any;
+            const combined = [...botEntries, ...filler, playerEntry].slice(0, 6);
+            return combined;
+          });
+        } catch (e) {}
+      }
+
       animFrameId = requestAnimationFrame(render);
     };
 
@@ -702,6 +884,33 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     >
       {/* Playable Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block cursor-crosshair z-0" />
+
+      {/* Death Modal: appears when player dies */}
+      {showDeathModal && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="bg-[#0d1722]/95 border border-[#00f5d4]/20 rounded-lg p-6 w-[320px] text-center shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+            <div className="font-mono text-[14px] font-bold text-[#ffb2b7]">You Were Eliminated</div>
+            <div className="font-mono text-[12px] text-[#dce3f0] mt-2">Final Score: {lastScore?.toLocaleString() || 0}</div>
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                onClick={shareThenRestart}
+                className="px-4 py-2 rounded bg-[#1d9bf0]/95 hover:bg-[#1290e8] text-white font-mono text-[12px]"
+              >
+                Share on X
+              </button>
+              <button
+                onClick={playAgain}
+                className="px-4 py-2 rounded bg-[#00f5d4]/95 hover:bg-[#26fedc] text-black font-mono text-[12px]"
+              >
+                Play Again
+              </button>
+            </div>
+            <div className="text-[10px] text-[#83948f] mt-3">
+              Share will include your site and X handle.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Control Hint in Center Bottom */}
       {hintVisible && (
@@ -799,6 +1008,18 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             <RotateCcw className="w-3 h-3 text-[#f9bd22]" />
             <span>RESTART</span>
           </button>
+        </div>
+        {/* Share on X button (appears after death) */}
+        <div className="pointer-events-auto">
+          {shareAvailable && (
+            <button
+              onClick={shareOnX}
+              type="button"
+              className="ml-3 px-4 py-1.5 rounded bg-[#1d9bf0]/90 hover:bg-[#1290e8] border border-[#0f76d4]/60 text-white font-mono text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(29,155,240,0.25)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span>Share on X</span>
+            </button>
+          )}
         </div>
 
         {/* Bottom-Right Circular Radar Reticle */}

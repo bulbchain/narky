@@ -112,6 +112,13 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Virtual mobile controls. dx/dy are normalized joystick directions.
+  const mobileInputRef = useRef({
+    active: false,
+    dx: 0,
+    dy: -1,
+    boost: false,
+  });
 
   // HUD States
   const [score, setScore] = useState<number>(0);
@@ -305,6 +312,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
     let isBoosting = false;
     const mouse = { x: width / 2, y: height / 2, active: false };
+    const mobileInput = mobileInputRef.current;
     let frame = 0;
     let localScore = 0;
     let localKills = 0;
@@ -319,6 +327,8 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       player.angle = -Math.PI / 2;
       player.trail = [];
       isBoosting = false;
+      mobileInput.active = false;
+      mobileInput.boost = false;
 
       // respawn bots and clear trails
       bots.forEach((b) => {
@@ -352,6 +362,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     };
 
     const onTouchMove = (e: TouchEvent) => {
+      if ((e.target as HTMLElement)?.closest('[data-mobile-control="true"]')) return;
       if (!e.touches.length) return;
       const rect = container.getBoundingClientRect();
       mouse.x = e.touches[0].clientX - rect.left;
@@ -372,6 +383,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     };
 
     const onTouchStart = (e: TouchEvent) => {
+      // On mobile, the virtual controls own touch input. A tap on the arena
+      // itself still acts as a temporary boost for backward compatibility.
+      if ((e.target as HTMLElement)?.closest('[data-mobile-control="true"]')) return;
       if ((e.target as HTMLElement).closest('button')) return;
       isBoosting = true;
       sounds.playBoostSound();
@@ -493,9 +507,17 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       }
 
       // Player Steering
-      const currentSpeed = isBoosting ? player.boostSpeed : player.baseSpeed;
+      const boostActive = isBoosting || mobileInput.boost;
+      const currentSpeed = boostActive ? player.boostSpeed : player.baseSpeed;
       if (!isPausedRef.current) {
-        if (mouse.active) {
+        if (mobileInput.active) {
+          // Virtual joystick: direction is independent of screen/canvas size.
+          const targetAngle = Math.atan2(mobileInput.dy, mobileInput.dx);
+          let diff = targetAngle - player.angle;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          player.angle += diff * (isBoosting ? 0.16 : 0.13);
+        } else if (mouse.active) {
           const targetAngle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
           let diff = targetAngle - player.angle;
           while (diff < -Math.PI) diff += Math.PI * 2;
@@ -550,7 +572,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       }
 
       // Boost emission & score bleed
-      if (!isPausedRef.current && isBoosting) {
+      if (!isPausedRef.current && boostActive) {
         localScore = Math.max(10, localScore - 0.2);
         if (frame % 3 === 0) {
           emitSparks(player.x, player.y, '#00f5d4', 2, 1.2);
@@ -767,10 +789,10 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.lineJoin = 'round';
 
         // Outer Neon Cyan Glow
-        ctx.shadowBlur = isBoosting ? 26 : 18;
-        ctx.shadowColor = isBoosting ? '#26fedc' : player.color;
+        ctx.shadowBlur = boostActive ? 26 : 18;
+        ctx.shadowColor = boostActive ? '#26fedc' : player.color;
         ctx.strokeStyle = player.color;
-        ctx.lineWidth = isBoosting ? player.thickness + 2 : player.thickness;
+        ctx.lineWidth = boostActive ? player.thickness + 2 : player.thickness;
 
         ctx.beginPath();
         ctx.moveTo(player.trail[0].x, player.trail[0].y);
@@ -787,11 +809,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.stroke();
 
         // Player Head
-        ctx.shadowBlur = isBoosting ? 20 : 12;
+        ctx.shadowBlur = boostActive ? 20 : 12;
         ctx.shadowColor = '#00f5d4';
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(player.x, player.y, isBoosting ? 6.5 : 5.5, 0, Math.PI * 2);
+        ctx.arc(player.x, player.y, boostActive ? 6.5 : 5.5, 0, Math.PI * 2);
         ctx.fill();
 
         // Callsign tag
@@ -879,11 +901,113 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     <div
       ref={containerRef}
       className={`relative rounded-xl bg-[#07111a] border border-[#00f5d4]/40 shadow-[0_0_30px_rgba(0,245,212,0.15),0_8px_40px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col justify-between p-4 select-none group/arena ${
-        isFullscreen ? 'w-full h-full min-h-screen' : 'min-h-[500px]'
+        isFullscreen
+          ? 'w-full h-full min-h-screen'
+          : 'h-[min(78vh,620px)] min-h-[440px] sm:min-h-[500px] sm:h-[600px]'
       }`}
     >
       {/* Playable Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block cursor-crosshair z-0" />
+
+      {/* MOBILE CONTROLLER
+          Left: drag joystick to steer. Right: hold BOOST to accelerate.
+          Pointer events work for touch + mouse and avoid the old canvas-wide
+          touch handler accidentally taking over the controls. */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-30 md:hidden pointer-events-none"
+        aria-label="Mobile game controls"
+      >
+        <div
+          data-mobile-control="true"
+          className="absolute right-3 bottom-3 w-[104px] h-[104px] rounded-full border border-[#00f5d4]/35 bg-[#07111a]/75 backdrop-blur-sm shadow-[0_0_22px_rgba(0,245,212,0.12)] pointer-events-auto touch-none select-none"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            const el = e.currentTarget;
+            const r = el.getBoundingClientRect();
+            const update = (clientX: number, clientY: number) => {
+              const cx = r.left + r.width / 2;
+              const cy = r.top + r.height / 2;
+              const max = r.width * 0.36;
+              let dx = clientX - cx;
+              let dy = clientY - cy;
+              const len = Math.hypot(dx, dy) || 1;
+              const amount = Math.min(1, len / max);
+              dx = (dx / len) * amount;
+              dy = (dy / len) * amount;
+              mobileInputRef.current.active = amount > 0.05;
+              mobileInputRef.current.dx = dx;
+              mobileInputRef.current.dy = dy;
+            };
+            update(e.clientX, e.clientY);
+          }}
+          onPointerMove={(e) => {
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+              const r = e.currentTarget.getBoundingClientRect();
+              const cx = r.left + r.width / 2;
+              const cy = r.top + r.height / 2;
+              const max = r.width * 0.36;
+              let dx = e.clientX - cx;
+              let dy = e.clientY - cy;
+              const len = Math.hypot(dx, dy) || 1;
+              const amount = Math.min(1, len / max);
+              mobileInputRef.current.active = amount > 0.05;
+              mobileInputRef.current.dx = (dx / len) * amount;
+              mobileInputRef.current.dy = (dy / len) * amount;
+            }
+          }}
+          onPointerUp={(e) => {
+            mobileInputRef.current.active = false;
+            mobileInputRef.current.dx = 0;
+            mobileInputRef.current.dy = -1;
+            try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+          }}
+          onPointerCancel={() => {
+            mobileInputRef.current.active = false;
+            mobileInputRef.current.dx = 0;
+            mobileInputRef.current.dy = -1;
+          }}
+        >
+          <div className="absolute inset-2 rounded-full border border-[#00f5d4]/15" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-[#00f5d4]/70 bg-[#0b2027]/90 shadow-[0_0_14px_rgba(0,245,212,0.25)]" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] font-mono tracking-widest text-[#83948f]">
+            MOVE
+          </div>
+        </div>
+
+        <button
+          data-mobile-control="true"
+          type="button"
+          aria-label="Hold to boost"
+          className="absolute left-3 bottom-5 w-[76px] h-[76px] rounded-full border border-[#f9bd22]/60 bg-[#1b1913]/85 text-[#ffdf9f] font-mono text-[10px] font-bold tracking-widest shadow-[0_0_20px_rgba(249,189,34,0.18)] active:scale-95 active:bg-[#2b2216] touch-none select-none"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            if (!mobileInputRef.current.boost) sounds.playBoostSound();
+            mobileInputRef.current.boost = true;
+          }}
+          onPointerUp={(e) => {
+            e.preventDefault();
+            mobileInputRef.current.boost = false;
+            try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {}
+          }}
+          onPointerCancel={() => { mobileInputRef.current.boost = false; }}
+          onPointerLeave={() => {
+            if (mobileInputRef.current.boost) mobileInputRef.current.boost = false;
+          }}
+        >
+          BOOST
+        </button>
+      </div>
+
+      {/* Mobile control hint */}
+      {hintVisible && (
+        <div className="absolute bottom-[118px] left-1/2 -translate-x-1/2 z-20 md:hidden pointer-events-none whitespace-nowrap">
+          <span className="font-mono text-[8px] tracking-widest text-[#26fedc] uppercase px-2.5 py-1 rounded bg-[#080f18]/80 border border-[#00f5d4]/25">
+            DRAG TO STEER · HOLD BOOST
+          </span>
+        </div>
+      )}
 
       {/* Death Modal: appears when player dies */}
       {showDeathModal && (
@@ -914,7 +1038,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       {/* Global Sensor Reticle (bottom-right, above canvas) */}
       <div
-        className="pointer-events-auto absolute bottom-4 right-4 z-50 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center cursor-pointer rounded-full"
+        className="hidden md:flex pointer-events-auto absolute bottom-4 right-4 z-50 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center cursor-pointer rounded-full"
         onClick={(e) => {
           e.preventDefault();
           sounds.playBeep(920);
@@ -954,16 +1078,16 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       {/* TOP ROW: Score Telemetry (Left) & Match Roster (Right) */}
       <div className="relative z-10 w-full flex items-start justify-between gap-4 pointer-events-none">
         {/* Top-Left: Score Card */}
-        <div className="pointer-events-auto bg-[#0d1722]/90 border border-[#00f5d4]/40 rounded-lg p-3 shadow-[0_0_15px_rgba(0,245,212,0.15)] flex flex-col min-w-[130px] backdrop-blur-md">
-          <span className="font-mono text-[9px] text-[#83948f] tracking-widest uppercase">SCORE</span>
-          <span className="font-mono text-[28px] leading-tight font-bold text-[#d7fff3] my-0.5 tracking-tight drop-shadow-[0_0_8px_rgba(0,245,212,0.4)]">
+        <div className="pointer-events-auto bg-[#0d1722]/90 border border-[#00f5d4]/40 rounded-lg p-2 md:p-3 shadow-[0_0_15px_rgba(0,245,212,0.15)] flex flex-col min-w-[100px] md:min-w-[130px] backdrop-blur-md">
+          <span className="font-mono text-[8px] md:text-[9px] text-[#83948f] tracking-widest uppercase">SCORE</span>
+          <span className="font-mono text-[18px] md:text-[28px] leading-tight font-bold text-[#d7fff3] my-0.5 tracking-tight drop-shadow-[0_0_8px_rgba(0,245,212,0.4)]">
             {score.toLocaleString()}
           </span>
-          <div className="flex items-center justify-between text-[10px] font-mono text-[#83948f] pt-1 border-t border-[#3a4a46]/40 mt-1">
+          <div className="flex items-center justify-between text-[9px] md:text-[10px] font-mono text-[#83948f] pt-1 border-t border-[#3a4a46]/40 mt-1">
             <span>KILLS</span>
             <span className="text-[#dce3f0] font-bold">{kills}</span>
           </div>
-          <div className="flex items-center justify-between text-[10px] font-mono text-[#83948f] mt-0.5">
+          <div className="flex items-center justify-between text-[9px] md:text-[10px] font-mono text-[#83948f] mt-0.5">
             <span>BEST TODAY</span>
             <span className="text-[#00f5d4] font-bold">{bestToday.toLocaleString()}</span>
           </div>
@@ -971,9 +1095,25 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
         {/* Top-Right: Collision Pill & Roster Card */}
         <div className="pointer-events-auto flex flex-col items-end gap-2">
-          {/* Collision Alert Pill */}
+          {/* Expand Button (always visible) */}
+          <div className="pointer-events-auto">
+            {onToggleFullscreen && (
+              <button
+                onClick={() => {
+                  sounds.playBeep(600);
+                  onToggleFullscreen();
+                }}
+                className="text-[#83948f] hover:text-[#00f5d4] transition-colors cursor-pointer p-0.5"
+                title={isFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen Arena'}
+              >
+                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            )}
+          </div>
+
+          {/* Collision Alert Pill (hidden on small screens) */}
           <div
-            className="bg-[#26131c]/90 border border-[#ffb2b7]/40 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,178,183,0.25)] backdrop-blur-md"
+            className="hidden md:flex bg-[#26131c]/90 border border-[#ffb2b7]/40 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,178,183,0.25)] backdrop-blur-md"
             style={{ borderColor: alertColor + '60' }}
           >
             <span
@@ -985,22 +1125,10 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             </span>
           </div>
 
-          {/* Roster Card */}
-          <div className="relative bg-[#0d1722]/90 border border-[#00f5d4]/40 rounded-lg p-3 shadow-[0_0_15px_rgba(0,245,212,0.15)] min-w-[160px] flex flex-col backdrop-blur-md">
+          {/* Roster Card (hidden on small screens) */}
+          <div className="hidden md:flex relative bg-[#0d1722]/90 border border-[#00f5d4]/40 rounded-lg p-3 shadow-[0_0_15px_rgba(0,245,212,0.15)] min-w-[160px] flex-col backdrop-blur-md">
             <div className="flex items-center justify-between text-[9px] font-mono text-[#83948f] uppercase pb-1 mb-1 border-b border-[#3a4a46]/40">
               <span className="tracking-wider">LIVE MATCH</span>
-              {onToggleFullscreen && (
-                <button
-                  onClick={() => {
-                    sounds.playBeep(600);
-                    onToggleFullscreen();
-                  }}
-                  className="text-[#83948f] hover:text-[#00f5d4] transition-colors cursor-pointer p-0.5"
-                  title={isFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen Arena'}
-                >
-                  {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
-                </button>
-              )}
             </div>
             <div className="flex flex-col gap-0.5 font-mono text-[10px]">
               {roster.map((item, idx) => (
@@ -1027,13 +1155,13 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       </div>
 
       {/* BOTTOM ROW: Restart Button (Left) & Concentric Radar Reticle (Right) */}
-      <div className="relative z-10 w-full flex items-end justify-between pointer-events-none mt-auto pt-10">
+      <div className="relative z-10 w-full flex items-end justify-between pointer-events-none mt-auto pt-10 pb-2 md:pb-0">
         {/* Bottom-Left Arcade RESTART Button */}
         <div className="pointer-events-auto">
           <button
             onClick={restartGame}
             type="button"
-            className="px-4 py-1.5 rounded bg-[#181a1a]/90 hover:bg-[#2b2216] border border-[#f9bd22]/60 hover:border-[#f9bd22] text-[#ffdf9f] font-mono text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(249,189,34,0.25)] hover:shadow-[0_0_15px_rgba(249,189,34,0.5)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="hidden md:flex px-4 py-1.5 rounded bg-[#181a1a]/90 hover:bg-[#2b2216] border border-[#f9bd22]/60 hover:border-[#f9bd22] text-[#ffdf9f] font-mono text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(249,189,34,0.25)] hover:shadow-[0_0_15px_rgba(249,189,34,0.5)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <RotateCcw className="w-3 h-3 text-[#f9bd22]" />
             <span>RESTART</span>

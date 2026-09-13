@@ -42,38 +42,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems: { id: NavTab; label: string }[] = [
     { id: 'play-now', label: 'PLAY NOW' },
-    { id: 'arenas-and-modes', label: 'ARENAS & MODES' },
     { id: 'how-it-works', label: 'HOW IT WORKS' },
     { id: 'leaderboard', label: 'LEADERBOARD' },
-    { id: 'token-and-rewards', label: 'TOKEN / REWARDS' },
   ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#080f18]/85 backdrop-blur-xl border-b border-[#00f5d4]/10 shadow-[0_1px_16px_rgba(0,0,0,0.6)]">
-      <div className="h-20 w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className="w-full px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 py-2 sm:py-3">
         {/* Left: Brand & Navigation */}
-        <div className="flex items-center gap-6 xl:gap-8">
+        <div className="flex items-center gap-3 sm:gap-6 xl:gap-8 min-w-0 flex-1">
           {/* Logo */}
           <button
             onClick={() => {
               sounds.playBeep(600);
               setActiveTab('play-now');
             }}
-            className="flex items-center gap-3 text-left group focus:outline-none"
+            className="flex items-center gap-2 sm:gap-3 text-left group focus:outline-none min-w-0"
           >
             <img
               alt="Driftline Neon Logo"
-              className="h-8 w-auto object-contain transition-transform group-hover:scale-105 filter drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]"
+              className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105 filter drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]"
               src="https://lh3.googleusercontent.com/aida/AEtjO1Vy00Uuw5T6WGg0uWjiJTV-05CjPjCFiykO2Bb3WLRGVwcrz8kmgoNDeCkRzRsXkQvwZUPitqhuWKYPOrrMMsAs_eNhHbaLFwWMLnu-TQs8fwQ3IoCYgU4miXuu-vq1McmVA76mWiOYsd4vW3NQtAtF1yxdAv8Fn5P3b8wNjZBoDVK1WOazLSSh81wdATIMQn4yByDq3y40VX34h4WSRc-ptj1MO4-mhhtAa9AUSMbXKxlkei76vcklGlE"
             />
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-lg tracking-wider text-[#d7fff3] group-hover:text-[#00f5d4] transition-colors leading-none">
-                DRIFTLINE
-              </span>
-              <span className="font-mono text-[9px] tracking-widest text-[#83948f] uppercase leading-tight mt-1">
-                SECTOR // VECTOR-09
-              </span>
-            </div>
           </button>
 
           {/* Desktop Navigation Links */}
@@ -101,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right: Live Telemetry & Wallet Trigger */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           {/* Sound Toggle */}
           <button
             onClick={() => {
@@ -109,9 +99,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               sounds.playBeep(520);
             }}
             title={soundMuted ? 'Unmute arcade sound effects' : 'Mute arcade sound effects'}
-            className="p-2 rounded bg-[#151c26] text-[#b9cac4] hover:text-[#00f5d4] hover:bg-[#19202a] border border-[#3a4a46]/40 transition-colors"
+            className="p-1.5 sm:p-2 rounded bg-[#151c26] text-[#b9cac4] hover:text-[#00f5d4] hover:bg-[#19202a] border border-[#3a4a46]/40 transition-colors"
           >
-            {soundMuted ? <VolumeX className="w-4 h-4 text-[#ffb2b7]" /> : <Volume2 className="w-4 h-4 text-[#00f5d4]" />}
+            {soundMuted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ffb2b7]" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00f5d4]" />}
           </button>
 
           {/* Live Pilots & Ping Indicator */}
@@ -135,13 +125,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               sounds.playBeep(840);
               onOpenWalletModal();
             }}
-            className="font-display text-xs font-bold uppercase tracking-wider px-4 py-2 sm:px-5 sm:py-2.5 bg-[#00f5d4] text-[#00382f] rounded hover:bg-[#26fedc] shadow-[0_0_20px_rgba(0,245,212,0.45)] hover:shadow-[0_0_30px_rgba(0,245,212,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+            className="font-display text-[9px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-2 sm:px-5 sm:py-2.5 bg-[#00f5d4] text-[#00382f] rounded hover:bg-[#26fedc] shadow-[0_0_20px_rgba(0,245,212,0.45)] hover:shadow-[0_0_30px_rgba(0,245,212,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 sm:gap-2 max-w-[140px] sm:max-w-none"
           >
-            <Wallet className="w-4 h-4" />
-            <span>
+            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">
               {wallet.isConnected
-                ? `${wallet.address?.slice(0, 4)}...${wallet.address?.slice(-4)} (${wallet.solBalance} SOL)`
-                : 'CONNECT WALLET'}
+                ? window.innerWidth < 640
+                  ? 'WALLET'
+                  : `${wallet.address?.slice(0, 4)}...${wallet.address?.slice(-4)} (${wallet.solBalance} SOL)`
+                : 'WALLET'}
             </span>
           </button>
 
@@ -152,15 +144,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               onOpenProfileModal();
             }}
             title="Pilot Profile & Telemetry Matrix"
-            className="w-8 h-8 rounded-full bg-[#00f5d4]/20 border border-[#00f5d4]/50 flex items-center justify-center hover:bg-[#00f5d4] hover:text-[#00382f] text-[#00f5d4] transition-all shadow-[0_0_10px_rgba(0,245,212,0.2)]"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f5d4]/20 border border-[#00f5d4]/50 flex items-center justify-center hover:bg-[#00f5d4] hover:text-[#00382f] text-[#00f5d4] transition-all shadow-[0_0_10px_rgba(0,245,212,0.2)] shrink-0"
           >
-            <User className="w-4 h-4" />
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
 
       {/* Mobile Sub-Navigation Bar */}
-      <div className="xl:hidden flex items-center justify-start overflow-x-auto gap-2 px-4 py-2 bg-[#0d141d]/95 border-t border-[#3a4a46]/40 text-xs">
+      <div className="xl:hidden flex items-center justify-start overflow-x-auto gap-2 px-3 sm:px-4 py-2 bg-[#0d141d]/95 border-t border-[#3a4a46]/40 text-xs [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (

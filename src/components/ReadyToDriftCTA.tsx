@@ -40,7 +40,7 @@ export const ReadyToDriftCTA: React.FC<ReadyToDriftCTAProps> = ({ onLaunchNow })
             className="w-full sm:w-auto px-8 py-4 rounded bg-[#00f5d4] text-[#00382f] font-display text-sm sm:text-base font-bold tracking-widest uppercase shadow-[0_0_30px_rgba(0,245,212,0.6)] hover:shadow-[0_0_45px_rgba(0,245,212,0.9)] hover:scale-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Gamepad2 className="w-5 h-5" />
-            <span>LAUNCH DRIFTLINE NOW</span>
+            <span>LAUNCH NARKY NOW</span>
           </button>
 
           <a

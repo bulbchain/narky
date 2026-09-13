@@ -32,7 +32,7 @@ export const FullscreenArenaModal: React.FC<FullscreenArenaModalProps> = ({
           <Gamepad2 className="w-5 h-5 text-[#00f5d4]" />
           <div className="flex items-center gap-2">
             <span className="font-display font-bold text-sm uppercase text-[#d7fff3] tracking-wider">
-              DRIFTLINE LIVE ARENA
+              NARKY LIVE ARENA
             </span>
             <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#19202a] text-[#00dfc1] border border-[#00dfc1]/30">
               SECTOR-09 ACTIVE

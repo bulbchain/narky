@@ -1,6 +1,6 @@
 import React from 'react';
-import { MessageSquare, Twitter, Send, Terminal } from 'lucide-react';
 import { sounds } from '../audio';
+import twitterIcon from '../asset/twitter.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col items-center lg:items-start gap-1">
             <div className="flex items-center gap-3">
               <span className="font-display text-xl uppercase text-[#d7fff3] font-bold tracking-wider">
-                DRIFTLINE
+                NARKY
               </span>
               <span className="font-mono text-[10px] bg-[#19202a] border border-[#3a4a46]/50 px-2 py-0.5 rounded text-[#83948f]">
                 v2.4.0-PROD
@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <a
+            {/* <a
               href="https://discord.gg"
               target="_blank"
               rel="noreferrer"
@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>DISCORD</span>
-            </a>
+            </a> */}
             <a
               href="https://x.com"
               target="_blank"
@@ -39,10 +39,14 @@ export const Footer: React.FC = () => {
               onClick={() => sounds.playBeep(600)}
               className="flex items-center gap-1.5 text-[#b9cac4] hover:text-[#00f5d4] transition-colors font-mono text-xs tracking-wider"
             >
-              <Twitter className="w-3.5 h-3.5" />
-              <span>#X / TWITTER</span>
+              <img
+                src={twitterIcon}
+                alt="X / Twitter"
+                className="w-3.5 h-3.5 object-contain"
+              />
+              <span>FOLLOW US</span>
             </a>
-            <a
+            {/* <a
               href="https://telegram.org"
               target="_blank"
               rel="noreferrer"
@@ -51,18 +55,8 @@ export const Footer: React.FC = () => {
             >
               <Send className="w-3.5 h-3.5" />
               <span>TELEGRAM</span>
-            </a>
-            <a
-              href="#docs"
-              onClick={(e) => {
-                e.preventDefault();
-                sounds.playBeep(600);
-              }}
-              className="flex items-center gap-1.5 text-[#b9cac4] hover:text-[#00f5d4] transition-colors font-mono text-xs tracking-wider"
-            >
-              <Terminal className="w-3.5 h-3.5" />
-              <span>DOCS / API</span>
-            </a>
+            </a> */}
+            
           </div>
         </div>
 
@@ -87,7 +81,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <span className="text-[#83948f] text-[11px] text-center md:text-right">
-            © 2025 DRIFTLINE SYSTEMS CORP. ALL VECTOR RIGHTS RESERVED.
+            © 2026 NARKY SYSTEMS CORP. ALL VECTOR RIGHTS RESERVED.
           </span>
         </div>
       </div>

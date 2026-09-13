@@ -1,5 +1,5 @@
 /**
- * Standalone Web Audio API Synthesizer for Driftline
+ * Standalone Web Audio API Synthesizer for NARKY
  * Zero external audio files required, low latency, arcade cyber sounds.
  */
 

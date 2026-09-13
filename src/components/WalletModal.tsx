@@ -85,8 +85,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({
                 <span className="text-[#f9bd22] font-bold text-sm">{wallet.solBalance} SOL</span>
               </div>
               <div className="flex items-center justify-between text-[#83948f]">
-                <span>$DRIFT BALANCE:</span>
-                <span className="text-[#00dfc1] font-bold text-sm">{wallet.driftBalance} $DRIFT</span>
+                <span>$NARKY BALANCE:</span>
+                <span className="text-[#00dfc1] font-bold text-sm">{wallet.narkyBalance} $NARKY</span>
               </div>
             </div>
 

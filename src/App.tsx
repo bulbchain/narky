@@ -45,7 +45,7 @@ export default function App() {
     address: null,
     isConnected: false,
     solBalance: 0,
-    driftBalance: 0,
+    narkyBalance: 0,
     walletName: null,
   });
 
@@ -54,23 +54,68 @@ export default function App() {
     setSoundMuted(nextMuted);
   };
 
-  const handleConnectWallet = (walletName: string) => {
+  const connectPhantomWallet = useCallback(async () => {
+    const provider = window.solana;
+
+    if (!provider || !provider.isPhantom) {
+      setIsWalletModalOpen(true);
+      return false;
+    }
+
+    try {
+      await provider.connect({ onlyIfTrusted: false });
+
+      const address = provider.publicKey?.toString() ?? null;
+
+      setWallet({
+        address,
+        isConnected: true,
+        solBalance: 0,
+        narkyBalance: 0,
+        walletName: 'Phantom',
+      });
+
+      setIsWalletModalOpen(false);
+      return true;
+    } catch (error) {
+      console.error('Phantom wallet connection failed:', error);
+      setIsWalletModalOpen(true);
+      return false;
+    }
+  }, []);
+
+  const handleConnectWallet = async (walletName: string) => {
+    if (walletName === 'Phantom') {
+      await connectPhantomWallet();
+      return;
+    }
+
     setWallet({
       address: '7xKpDr1ftL9zReap4UjT7kZ9sY2cSol8vQmW3aX',
       isConnected: true,
       solBalance: 2.45,
-      driftBalance: 3200,
+      narkyBalance: 3200,
       walletName,
     });
     setIsWalletModalOpen(false);
   };
 
-  const handleDisconnectWallet = () => {
+  const handleDisconnectWallet = async () => {
+    const provider = window.solana;
+
+    try {
+      if (provider?.disconnect) {
+        await provider.disconnect();
+      }
+    } catch (error) {
+      console.error('Phantom wallet disconnect failed:', error);
+    }
+
     setWallet({
       address: null,
       isConnected: false,
       solBalance: 0,
-      driftBalance: 0,
+      narkyBalance: 0,
       walletName: null,
     });
     setIsWalletModalOpen(false);
@@ -80,7 +125,7 @@ export default function App() {
     setWallet((prev) => ({
       ...prev,
       solBalance: Number((prev.solBalance + 0.5).toFixed(2)),
-      driftBalance: prev.driftBalance + 500,
+      narkyBalance: prev.narkyBalance + 500,
     }));
   };
 
@@ -103,7 +148,13 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         wallet={wallet}
-        onOpenWalletModal={() => setIsWalletModalOpen(true)}
+        onOpenWalletModal={() => {
+          if (!wallet.isConnected) {
+            void connectPhantomWallet();
+            return;
+          }
+          setIsWalletModalOpen(true);
+        }}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         callsign={callsign}
         soundMuted={soundMuted}

@@ -28,14 +28,14 @@ export const TokenRewardsView: React.FC<TokenRewardsProps> = ({ wallet, onOpenWa
         <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full bg-[#19202a] border border-[#f9bd22]/30 text-[#f9bd22] mx-auto">
           <Coins className="w-3.5 h-3.5" />
           <span className="font-mono text-[10px] uppercase tracking-widest font-semibold">
-            DRIFTLINE ECONOMY // $DRIFT PROTOCOL
+            NARKY ECONOMY // $NARKY PROTOCOL
           </span>
         </div>
         <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl uppercase font-bold text-[#dce3f0] tracking-wider">
           TOKENOMICS &amp; PILOT REWARDS
         </h1>
         <p className="font-mono text-sm text-[#b9cac4] leading-relaxed">
-          The native utility and governance asset of the Driftline vector matrix. Earn $DRIFT through arena takedowns, wormhole extractions, and protocol staking.
+          The native utility and governance asset of the NARKY vector matrix. Earn $NARKY through arena takedowns, wormhole extractions, and protocol staking.
         </p>
       </div>
 
@@ -103,18 +103,18 @@ export const TokenRewardsView: React.FC<TokenRewardsProps> = ({ wallet, onOpenWa
               SECTOR STAKING VAULT
             </span>
             <h3 className="font-display text-2xl uppercase font-bold text-[#dce3f0] mt-0.5">
-              STAKE $DRIFT · EARN ARENA CUTS
+              STAKE $NARKY · EARN ARENA CUTS
             </h3>
             <p className="font-mono text-xs text-[#b9cac4] mt-1 leading-relaxed">
-              Locked $DRIFT stakes generate daily yield derived from arena wager transaction pools and extraction penalties.
+              Locked $NARKY stakes generate daily yield derived from arena wager transaction pools and extraction penalties.
             </p>
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between font-mono text-xs">
-              <span className="text-[#83948f]">STAKE AMOUNT ($DRIFT)</span>
+              <span className="text-[#83948f]">STAKE AMOUNT ($NARKY)</span>
               <span className="text-[#00f5d4]">
-                AVAILABLE: {wallet.isConnected ? `${wallet.driftBalance} $DRIFT` : '0 $DRIFT'}
+                AVAILABLE: {wallet.isConnected ? `${wallet.narkyBalance} $NARKY` : '0 $NARKY'}
               </span>
             </div>
             <div className="relative">
@@ -125,7 +125,7 @@ export const TokenRewardsView: React.FC<TokenRewardsProps> = ({ wallet, onOpenWa
                 className="w-full px-4 py-3 bg-[#080f18] text-[#dce3f0] font-mono text-sm rounded border border-[#3a4a46]/70 focus:border-[#00f5d4] outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-[#83948f] font-bold">
-                $DRIFT
+                $NARKY
               </span>
             </div>
           </div>
@@ -154,7 +154,7 @@ export const TokenRewardsView: React.FC<TokenRewardsProps> = ({ wallet, onOpenWa
                 onOpenWalletModal();
               } else {
                 sounds.playBeep(780);
-                alert(`Successfully staked ${stakeAmount} $DRIFT in the Driftline Vault!`);
+                alert(`Successfully staked ${stakeAmount} $NARKY in the NARKY Vault!`);
               }
             }}
             className="w-full py-3 mt-2 rounded bg-[#f9bd22] hover:bg-[#ffd57d] text-[#261a00] font-display text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(249,189,34,0.4)] cursor-pointer"

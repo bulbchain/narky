@@ -1,3 +1,17 @@
+declare global {
+  interface Window {
+    solana?: {
+      isPhantom?: boolean;
+      publicKey?: {
+        toString: () => string;
+      } | null;
+      isConnected?: boolean;
+      connect: (options?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey?: { toString: () => string } } | void>;
+      disconnect?: () => Promise<void>;
+    };
+  }
+}
+
 export type NavTab = 'play-now' | 'arenas-and-modes' | 'how-it-works' | 'leaderboard' | 'token-and-rewards';
 
 export type ArenaMode = 'free' | 'staked';
@@ -30,7 +44,7 @@ export interface WalletState {
   walletName: string | null;
   address: string | null;
   solBalance: number;
-  driftBalance: number;
+  narkyBalance: number;
 }
 
 export interface GameStats {

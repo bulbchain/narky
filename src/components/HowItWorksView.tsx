@@ -23,7 +23,7 @@ export const HowItWorksView: React.FC = () => {
           </span>
         </div>
         <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl uppercase font-bold text-[#dce3f0] tracking-wider">
-          HOW DRIFTLINE WORKS
+          HOW NARKY WORKS
         </h1>
         <p className="font-mono text-sm text-[#b9cac4] leading-relaxed">
           The tactical physics engine combines continuous vector curves, light-mass economics, and ruthless 100% cutoff lethality.

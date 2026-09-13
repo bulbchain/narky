@@ -28,6 +28,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const pilotRank =
+    score >= 15000
+      ? 'VECTOR COMMANDER'
+      : score >= 9000
+        ? 'TACTICAL VETERAN'
+        : score >= 5000
+          ? 'VECTOR FIGHTER'
+          : 'RISING PILOT';
+
+  const pilotLevel = Math.min(99, 8 + Math.floor(kills / 2) + Math.floor(score / 2500));
+  const boostEfficiency = Math.min(99.9, 68 + kills * 2.8 + score / 600).toFixed(1);
+  const escapeRate = Math.min(99.9, 52 + kills * 3.1 + score / 800).toFixed(1);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080f18]/85 backdrop-blur-md">
       <div className="relative w-full max-w-md rounded-xl bg-[#19202a] border border-[#00f5d4]/40 p-6 shadow-[0_0_40px_rgba(0,245,212,0.25)] flex flex-col gap-5">
@@ -61,7 +74,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <span className="font-display text-xl font-bold text-[#00f5d4] uppercase">
               {callsign || 'CYBER_GHOST'}
             </span>
-            <span className="font-mono text-[10px] text-[#ffd57d] mt-0.5">PILOT RANK: TACTICAL VETERAN (LVL 14)</span>
+            <span className="font-mono text-[10px] text-[#ffd57d] mt-0.5">
+              PILOT RANK: {pilotRank} (LVL {pilotLevel})
+            </span>
           </div>
         </div>
 
@@ -69,21 +84,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         <div className="grid grid-cols-2 gap-3 font-mono text-xs">
           <div className="p-3 bg-[#080f18] rounded border border-[#3a4a46]/40 flex flex-col">
             <span className="text-[#83948f] text-[9px]">LIFETIME TAKEDOWNS</span>
-            <span className="text-[#00f5d4] text-base font-bold mt-0.5">{kills + 42} KILLS</span>
+            <span className="text-[#00f5d4] text-base font-bold mt-0.5">{kills} KILLS</span>
           </div>
           <div className="p-3 bg-[#080f18] rounded border border-[#3a4a46]/40 flex flex-col">
             <span className="text-[#83948f] text-[9px]">PEAK LIGHT MASS</span>
             <span className="text-[#d7fff3] text-base font-bold mt-0.5">
-              {(score + 4820).toLocaleString()}
+              {score.toLocaleString()}
             </span>
           </div>
           <div className="p-3 bg-[#080f18] rounded border border-[#3a4a46]/40 flex flex-col">
             <span className="text-[#83948f] text-[9px]">BOOST EFFICIENCY</span>
-            <span className="text-[#f9bd22] text-base font-bold mt-0.5">94.2%</span>
+            <span className="text-[#f9bd22] text-base font-bold mt-0.5">{boostEfficiency}%</span>
           </div>
           <div className="p-3 bg-[#080f18] rounded border border-[#3a4a46]/40 flex flex-col">
             <span className="text-[#83948f] text-[9px]">ARENA ESCAPE RATE</span>
-            <span className="text-[#ffb2b7] text-base font-bold mt-0.5">78.5%</span>
+            <span className="text-[#ffb2b7] text-base font-bold mt-0.5">{escapeRate}%</span>
           </div>
         </div>
 

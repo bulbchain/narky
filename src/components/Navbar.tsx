@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 sm:gap-3 text-left group focus:outline-none min-w-0"
           >
             <img
-              alt="Driftline Neon Logo"
+              alt="NARKY Neon Logo"
               className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105 filter drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]"
               src="https://lh3.googleusercontent.com/aida/AEtjO1Vy00Uuw5T6WGg0uWjiJTV-05CjPjCFiykO2Bb3WLRGVwcrz8kmgoNDeCkRzRsXkQvwZUPitqhuWKYPOrrMMsAs_eNhHbaLFwWMLnu-TQs8fwQ3IoCYgU4miXuu-vq1McmVA76mWiOYsd4vW3NQtAtF1yxdAv8Fn5P3b8wNjZBoDVK1WOazLSSh81wdATIMQn4yByDq3y40VX34h4WSRc-ptj1MO4-mhhtAa9AUSMbXKxlkei76vcklGlE"
             />

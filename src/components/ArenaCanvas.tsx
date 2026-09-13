@@ -2393,12 +2393,12 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       <div
         className={
           `absolute inset-x-0 z-30 pointer-events-none px-4 ${
-            isFullscreen ? 'bottom-8 md:bottom-10' : 'bottom-0 md:bottom-2'
+            isFullscreen ? 'bottom-12 md:bottom-12' : 'bottom-0 md:bottom-2'
           }`
         }
         style={{
           paddingBottom: isFullscreen
-            ? 'calc(32px + env(safe-area-inset-bottom))'
+            ? 'calc(48px + env(safe-area-inset-bottom))'
             : 'calc(18px + env(safe-area-inset-bottom))',
         }}
         aria-label="Mobile game controls"

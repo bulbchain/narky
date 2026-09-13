@@ -912,6 +912,36 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       )}
 
+      {/* Global Sensor Reticle (bottom-right, above canvas) */}
+      <div
+        className="pointer-events-auto absolute bottom-4 right-4 z-50 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center cursor-pointer rounded-full"
+        onClick={(e) => {
+          e.preventDefault();
+          sounds.playBeep(920);
+          setAlertText('RADAR SWEEP ACTIVE');
+          setTimeout(() => setAlertText('TRAIL COLLISION'), 2000);
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          sounds.playBeep(920);
+          setAlertText('RADAR SWEEP ACTIVE');
+          setTimeout(() => setAlertText('TRAIL COLLISION'), 2000);
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          sounds.playBeep(920);
+          setAlertText('RADAR SWEEP ACTIVE');
+          setTimeout(() => setAlertText('TRAIL COLLISION'), 2000);
+        }}
+        role="button"
+        aria-label="Activate radar sweep"
+      >
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#00f5d4" strokeWidth="2" strokeOpacity="0.9" />
+        </svg>
+        <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-7 md:h-7 rounded-full bg-[#00f5d4] shadow-[0_0_20px_#00f5d4] border-2 border-white relative flex items-center justify-center animate-pulse" />
+      </div>
+
       {/* Control Hint in Center Bottom */}
       {hintVisible && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 pointer-events-none z-10 transition-opacity duration-500 opacity-70 group-hover/arena:opacity-30 text-center">
@@ -1009,49 +1039,9 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             <span>RESTART</span>
           </button>
         </div>
-        {/* Share on X button (appears after death) */}
-        <div className="pointer-events-auto">
-          {shareAvailable && (
-            <button
-              onClick={shareOnX}
-              type="button"
-              className="ml-3 px-4 py-1.5 rounded bg-[#1d9bf0]/90 hover:bg-[#1290e8] border border-[#0f76d4]/60 text-white font-mono text-[10px] uppercase tracking-widest shadow-[0_0_10px_rgba(29,155,240,0.25)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span>Share on X</span>
-            </button>
-          )}
-        </div>
+        {/* share button removed from bottom controls; sharing available via death modal only */}
 
-        {/* Bottom-Right Circular Radar Reticle */}
-        <div
-          className="pointer-events-auto relative w-24 h-24 flex items-center justify-center cursor-pointer group/reticle"
-          title="Sensor Array Reticle"
-          onClick={() => {
-            sounds.playBeep(920);
-            setAlertText('RADAR SWEEP ACTIVE');
-            setTimeout(() => setAlertText('TRAIL COLLISION'), 2000);
-          }}
-        >
-          {/* Concentric Radar SVG Rings and Crosshairs */}
-          <svg className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover/reticle:rotate-45" viewBox="0 0 100 100">
-            {/* Outer ring */}
-            <circle cx="50" cy="50" fill="none" r="45" stroke="#00f5d4" strokeOpacity="0.6" strokeWidth="1.4" />
-            {/* Middle ring */}
-            <circle cx="50" cy="50" fill="none" r="32" stroke="#00f5d4" strokeOpacity="0.7" strokeWidth="1.2" />
-            {/* Inner ring */}
-            <circle cx="50" cy="50" fill="none" r="18" stroke="#00f5d4" strokeOpacity="0.5" strokeWidth="1" />
-            {/* Crosshair lines */}
-            <line stroke="#00f5d4" strokeOpacity="0.5" strokeWidth="1.2" x1="50" x2="50" y1="5" y2="95" />
-            <line stroke="#00f5d4" strokeOpacity="0.5" strokeWidth="1.2" x1="5" x2="95" y1="50" y2="50" />
-            {/* Axis pip markers */}
-            <circle cx="50" cy="18" fill="#00f5d4" r="2.5" />
-            <circle cx="50" cy="82" fill="#00f5d4" r="2.5" />
-            <circle cx="18" cy="50" fill="#00f5d4" r="2.5" />
-            <circle cx="82" cy="50" fill="#00f5d4" r="2.5" />
-          </svg>
-          {/* Central Radar Light Orb */}
-          <div className="w-7 h-7 rounded-full bg-[#00f5d4] shadow-[0_0_20px_#00f5d4,0_0_35px_#00f5d4] border-2 border-white relative flex items-center justify-center animate-pulse" />
-        </div>
+        
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import React, { useCallback, useState } from 'react';
 import { NavTab, ArenaMode, WalletState } from './types';
 import { Navbar } from './components/Navbar';

@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, Gamepad2, Volume2, VolumeX } from 'lucide-react';
+import { X, Volume2, VolumeX } from 'lucide-react';
 import { ArenaCanvas } from './ArenaCanvas';
 import { sounds } from '../audio';
+import logo from '../asset/narkywbg.png';
 
 interface FullscreenArenaModalProps {
   isOpen: boolean;
@@ -29,11 +30,15 @@ export const FullscreenArenaModal: React.FC<FullscreenArenaModalProps> = ({
       {/* Top Thin HUD Command Bar */}
       <div className="h-14 w-full bg-[#080f18]/90 border-b border-[#00f5d4]/20 px-4 sm:px-6 flex items-center justify-between z-20 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <Gamepad2 className="w-5 h-5 text-[#00f5d4]" />
+          <img
+            src={logo}
+            alt="NARKY logo"
+            className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_0_14px_rgba(0,245,212,0.6)]"
+          />
           <div className="flex items-center gap-2">
-            <span className="font-display font-bold text-sm uppercase text-[#d7fff3] tracking-wider">
-              NARKY LIVE ARENA
-            </span>
+            {/* <span className="font-display font-bold text-sm uppercase text-[#d7fff3] tracking-wider">
+              NARKY
+            </span> */}
             <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#19202a] text-[#00dfc1] border border-[#00dfc1]/30">
               SECTOR-09 ACTIVE
             </span>

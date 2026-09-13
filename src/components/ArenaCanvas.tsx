@@ -78,6 +78,8 @@ interface TrailPoint {
   y: number;
 }
 
+type SoilCreatureType = 'worm' | 'snake' | 'centipede' | 'ant' | 'slug' | 'standard';
+
 interface BotCraft {
   name: string;
   color: string;
@@ -91,6 +93,8 @@ interface BotCraft {
   thickness: number;
   turnRate: number;
   score: number;
+  creatureType: SoilCreatureType;
+  isFastPasser?: boolean;
 }
 
 export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
@@ -247,12 +251,10 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       });
     };
 
-    // Spawn powerups periodically
     for (let i = 0; i < 4; i++) spawnPowerUp();
 
     let particles: Spark[] = [];
     let floatingTexts: FloatingText[] = [];
-
     let screenShake = 0;
 
     const emitSparks = (x: number, y: number, color: string, count = 10, speedMult = 1) => {
@@ -306,39 +308,57 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       player.trail.push({ x: player.x, y: player.y + i * 3 });
     }
 
-    const createBotPool = (count: number): BotCraft[] => {
-      const botNames = ['WILL', 'VORTEX_9', 'PYRE', 'DRIFTER', 'BARRELEYE', 'NAUTILUS', 'RATTATI', 'SWITCHHEAD', 'HYDRA', 'TITAN'];
-      const colors = ['#00c3ff', '#2bd966', '#e60067', '#38bdf8', '#00f5d4', '#c084fc', '#ff4655', '#ffd57d'];
+    const createSingleBot = (index: number): BotCraft => {
+      const creatureConfigs: { type: SoilCreatureType; names: string[]; color: string; speedMult: number; thickness: number }[] = [
+        { type: 'worm', names: ['EARTHWORM', 'NIGHTCRAWLER', 'MUDLARK'], color: '#ff88aa', speedMult: 0.9, thickness: 8.5 },
+        { type: 'snake', names: ['COBRA', 'VIPER', 'PYTHON'], color: '#2bd966', speedMult: 1.3, thickness: 7.0 },
+        { type: 'centipede', names: ['CENTIPEDE', 'SCOLO', 'MILLI_SPEED'], color: '#ff5500', speedMult: 1.25, thickness: 8.0 },
+        { type: 'ant', names: ['SOLDIER_ANT', 'BULLET_ANT', 'FIRE_ANT'], color: '#e60067', speedMult: 1.1, thickness: 6.5 },
+        { type: 'slug', names: ['SLIME_SLUG', 'GLOP', 'MUD_SLUG'], color: '#a3e635', speedMult: 0.65, thickness: 11.0 },
+        { type: 'standard', names: ['WILL', 'VORTEX_9', 'PYRE', 'DRIFTER', 'BARRELEYE'], color: '#00c3ff', speedMult: 1.0, thickness: 7.5 },
+      ];
 
-      return Array.from({ length: count }, (_, i) => {
-        const angle = Math.random() * Math.PI * 2;
-        const r = Math.sqrt(Math.random()) * (ARENA_RADIUS - 100);
-        const bx = ARENA_CENTER_X + Math.cos(angle) * r;
-        const by = ARENA_CENTER_Y + Math.sin(angle) * r;
+      const config = creatureConfigs[Math.floor(Math.random() * creatureConfigs.length)];
+      const isFastPasser = Math.random() < 0.22; // 22% chance of shock fast pass creature
 
-        const bTrail: TrailPoint[] = [];
-        for (let j = 0; j < 18; j++) {
-          bTrail.push({ x: bx - j * 2, y: by - j * 2 });
-        }
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random()) * (ARENA_RADIUS - 100);
+      const bx = ARENA_CENTER_X + Math.cos(angle) * r;
+      const by = ARENA_CENTER_Y + Math.sin(angle) * r;
 
-        return {
-          name: `${botNames[i % botNames.length]}_${Math.floor(Math.random() * 89 + 10)}`,
-          color: colors[i % colors.length],
-          coreColor: '#ffffff',
-          x: bx,
-          y: by,
-          angle: Math.random() * Math.PI * 2,
-          speed: 1.8 + Math.random() * 0.6,
-          trail: bTrail,
-          maxTrail: Math.floor(Math.random() * 15 + 25),
-          thickness: 7.5,
-          turnRate: 0.04 + Math.random() * 0.01,
-          score: Math.floor(Math.random() * 500 + 100),
-        };
-      });
+      const bTrail: TrailPoint[] = [];
+      const trailLen = isFastPasser ? 45 : Math.floor(Math.random() * 15 + 25);
+      for (let j = 0; j < 18; j++) {
+        bTrail.push({ x: bx - j * 2, y: by - j * 2 });
+      }
+
+      const botName = isFastPasser 
+        ? `FAST_${config.names[Math.floor(Math.random() * config.names.length)]}` 
+        : `${config.names[Math.floor(Math.random() * config.names.length)]}_${Math.floor(Math.random() * 89 + 10)}`;
+
+      return {
+        name: botName,
+        color: isFastPasser ? '#ff0055' : config.color,
+        coreColor: isFastPasser ? '#ffff00' : '#ffffff',
+        x: bx,
+        y: by,
+        angle: Math.random() * Math.PI * 2,
+        speed: (isFastPasser ? 4.5 + Math.random() * 1.5 : (1.8 + Math.random() * 0.6)) * config.speedMult,
+        trail: bTrail,
+        maxTrail: trailLen,
+        thickness: config.thickness,
+        turnRate: isFastPasser ? 0.015 : (0.04 + Math.random() * 0.01),
+        score: isFastPasser ? 750 : Math.floor(Math.random() * 500 + 100),
+        creatureType: config.type,
+        isFastPasser,
+      };
     };
 
-    let bots: BotCraft[] = createBotPool(20);
+    const createBotPool = (count: number): BotCraft[] => {
+      return Array.from({ length: count }, (_, i) => createSingleBot(i));
+    };
+
+    let bots: BotCraft[] = createBotPool(22);
     let isBoosting = false;
     const mouse = { x: width / 2, y: height / 2, active: false };
     const mobileInput = mobileInputRef.current;
@@ -347,7 +367,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     let localScore = 0;
     let localKills = 0;
 
-    // Combo Tracker
     let comboTimer = 0;
     let currentCombo = 0;
 
@@ -378,7 +397,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       mobileInput.dy = -1;
       mobileInput.boost = false;
 
-      bots = createBotPool(20);
+      bots = createBotPool(22);
       orbs = Array.from({ length: 400 }, () => createOrb());
       powerUps = [];
       for (let i = 0; i < 4; i++) spawnPowerUp();
@@ -501,7 +520,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const render = () => {
       frame++;
 
-      // PowerUp timer loop
       if (!isPausedRef.current) {
         const remainingBuffs: { type: PowerUpType; percent: number }[] = [];
         activePowerUps.forEach((buff, key) => {
@@ -517,7 +535,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         });
         setActiveBuffs(remainingBuffs);
 
-        // Combo decay
         if (comboTimer > 0) {
           comboTimer--;
           if (comboTimer <= 0) {
@@ -530,7 +547,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       ctx.fillStyle = '#07111a';
       ctx.fillRect(0, 0, width, height);
 
-      // Camera shake calculations
       let shakeX = 0;
       let shakeY = 0;
       if (screenShake > 0) {
@@ -565,7 +581,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       ctx.stroke();
       ctx.restore();
 
-      // Power Ups render & collection
       if (frame % 300 === 0 && !isPausedRef.current) spawnPowerUp();
 
       for (let i = powerUps.length - 1; i >= 0; i--) {
@@ -598,12 +613,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
         ctx.restore();
 
-        // Collect Power Up
         if (!isPausedRef.current) {
           const dist = Math.hypot(player.x - p.x, player.y - p.y);
           if (dist < player.thickness + p.radius + 4) {
             sounds.playOrbChime(150);
-            const durationFrames = 360; // 6 seconds
+            const durationFrames = 360;
             activePowerUps.set(p.type, { type: p.type, duration: durationFrames, maxDuration: durationFrames });
             emitSparks(p.x, p.y, iconColor, 20, 2);
             addScorePopup(p.x, p.y - 15, `${p.type.toUpperCase()} ACTIVATED!`, iconColor, 1.2);
@@ -612,7 +626,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }
       }
 
-      // Orbs Loop & Magnet effect
       const hasMagnet = activePowerUps.has('magnet');
 
       for (let i = 0; i < orbs.length; i++) {
@@ -656,7 +669,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.restore();
       }
 
-      // Player Steering & Speed
       const hasOverclock = activePowerUps.has('overclock');
       const boostActive = isBoosting || mobileInput.boost || hasOverclock;
       const currentSpeed = boostActive ? player.boostSpeed * (hasOverclock ? 1.2 : 1.0) : player.baseSpeed;
@@ -682,7 +694,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         player.y += Math.sin(player.angle) * currentSpeed;
       }
 
-      // Boundary Check
       const playerDistFromCenter = Math.hypot(player.x - ARENA_CENTER_X, player.y - ARENA_CENTER_Y);
       if (playerDistFromCenter >= ARENA_RADIUS - 10) {
         emitSparks(player.x, player.y, '#00ff66', 35, 3);
@@ -717,19 +728,16 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         setShowDeathModal(true);
       }
 
-      // Player Trail update
       if (!isPausedRef.current) {
         player.trail.unshift({ x: player.x, y: player.y });
         if (player.trail.length > player.maxTrail) player.trail.pop();
       }
 
-      // Score drain on boost (Overclock protects score!)
       if (!isPausedRef.current && boostActive && !hasOverclock) {
         localScore = Math.max(10, localScore - 0.2);
         if (frame % 3 === 0) emitSparks(player.x, player.y, '#00f5d4', 2, 1.2);
       }
 
-      // Orb Collection
       for (let i = orbs.length - 1; i >= 0; i--) {
         const orb = orbs[i];
         const dist = Math.hypot(player.x - orb.x, player.y - orb.y);
@@ -759,11 +767,15 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }
       }
 
-      // Bot logic
       const hasPhase = activePowerUps.has('phase');
 
-      bots.forEach((bot) => {
+      bots.forEach((bot, bIdx) => {
         if (isPausedRef.current) return;
+
+        // Fast Passer Shock Trail Particles
+        if (bot.isFastPasser && frame % 2 === 0) {
+          emitSparks(bot.x, bot.y, '#ff0055', 2, 2.0);
+        }
 
         let closestOrb: Orb | null = null;
         let minDist = 220;
@@ -776,14 +788,14 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           }
         }
 
-        if (closestOrb) {
+        if (!bot.isFastPasser && closestOrb) {
           const targetAngle = Math.atan2(closestOrb.y - bot.y, closestOrb.x - bot.x);
           let diff = targetAngle - bot.angle;
           while (diff < -Math.PI) diff += Math.PI * 2;
           while (diff > Math.PI) diff -= Math.PI * 2;
           bot.angle += diff * bot.turnRate;
         } else {
-          bot.angle += (Math.random() - 0.5) * 0.08;
+          bot.angle += (Math.random() - 0.5) * (bot.isFastPasser ? 0.02 : 0.08);
         }
 
         bot.x += Math.cos(bot.angle) * bot.speed;
@@ -791,11 +803,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
         const botDistFromCenter = Math.hypot(bot.x - ARENA_CENTER_X, bot.y - ARENA_CENTER_Y);
         if (botDistFromCenter >= ARENA_RADIUS - 15) {
-          const spawnAngle = Math.random() * Math.PI * 2;
-          const spawnR = Math.sqrt(Math.random()) * (ARENA_RADIUS - 150);
-          bot.x = ARENA_CENTER_X + Math.cos(spawnAngle) * spawnR;
-          bot.y = ARENA_CENTER_Y + Math.sin(spawnAngle) * spawnR;
-          bot.trail = [];
+          bots[bIdx] = createSingleBot(bIdx);
         }
 
         bot.trail.unshift({ x: bot.x, y: bot.y });
@@ -819,22 +827,21 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           if (td < player.thickness + 5) {
             localKills += 1;
             currentCombo += 1;
-            comboTimer = 240; // 4 second combo window
+            comboTimer = 240;
             setComboCount(currentCombo);
 
-            const baseKillScore = 420;
+            const baseKillScore = bot.isFastPasser ? 900 : 420;
             const comboBonus = currentCombo * 150;
             const totalKillAward = baseKillScore + comboBonus;
             localScore += totalKillAward;
 
-            screenShake = 12;
+            screenShake = 14;
             emitSparks(bot.x, bot.y, bot.color, 45, 3.5);
 
             const comboLabel = currentCombo > 1 ? ` (${currentCombo}X COMBO!)` : '';
             addScorePopup(bot.x, bot.y - 20, `${bot.name} SHATTERED! +${totalKillAward}${comboLabel}`, '#ffb2b7', 1.3);
             sounds.playShatter();
 
-            // Explosive Loot Orbs burst from shattered bot!
             dropLootOrbs(bot.x, bot.y, bot.score || 350);
 
             setAlertText(currentCombo > 1 ? `MULTI-KILL x${currentCombo}!` : `${bot.name} ELIMINATED`);
@@ -848,17 +855,12 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             if (onKillsUpdate) onKillsUpdate(localKills);
             if (onScoreUpdate) onScoreUpdate(Math.floor(localScore));
 
-            const spawnAngle = Math.random() * Math.PI * 2;
-            const spawnR = Math.sqrt(Math.random()) * (ARENA_RADIUS - 150);
-            bot.x = ARENA_CENTER_X + Math.cos(spawnAngle) * spawnR;
-            bot.y = ARENA_CENTER_Y + Math.sin(spawnAngle) * spawnR;
-            bot.score = 150;
-            bot.trail = [];
+            bots[bIdx] = createSingleBot(bIdx);
             break;
           }
         }
 
-        // BOT CUTS PLAYER (Ignored if PHASE SHIFT active)
+        // BOT CUTS PLAYER
         if (!hasPhase) {
           for (let t = 6; t < bot.trail.length; t++) {
             const pd = Math.hypot(bot.trail[t].x - player.x, bot.trail[t].y - player.y);
@@ -899,14 +901,14 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }
       });
 
-      // RENDER BOT TRAILS
+      // RENDER BOT TRAILS & SOIL CREATURE HEADS
       bots.forEach((bot) => {
         if (bot.trail.length > 2) {
           ctx.save();
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = bot.color;
+          ctx.shadowBlur = bot.isFastPasser ? 22 : 14;
+          ctx.shadowColor = bot.isFastPasser ? '#ff0055' : bot.color;
           ctx.strokeStyle = bot.color;
           ctx.lineWidth = bot.thickness;
 
@@ -927,44 +929,136 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
           ctx.translate(bot.x, bot.y);
           ctx.rotate(bot.angle + Math.PI / 2);
 
-          const botCapW = 12;
-          const botCapH = 24;
-          const botCapR = botCapW / 2;
+          // Render distinct soil creatures
+          if (bot.creatureType === 'worm') {
+            // Earthworm Head & Rings
+            ctx.fillStyle = bot.color;
+            ctx.beginPath();
+            ctx.arc(0, -6, 7, 0, Math.PI * 2);
+            ctx.fill();
+            // Clitellum (band)
+            ctx.fillStyle = '#ffb2b7';
+            ctx.fillRect(-6, 0, 12, 6);
+          } else if (bot.creatureType === 'snake') {
+            // Snake head with eyes and tongue
+            ctx.fillStyle = bot.color;
+            ctx.beginPath();
+            ctx.moveTo(0, -12);
+            ctx.lineTo(-7, 4);
+            ctx.lineTo(7, 4);
+            ctx.closePath();
+            ctx.fill();
 
-          ctx.shadowBlur = 12;
-          ctx.shadowColor = bot.color;
-          ctx.fillStyle = bot.color;
+            // Eyes
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(-3, -3, 1.8, 0, Math.PI * 2);
+            ctx.arc(3, -3, 1.8, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.beginPath();
-          ctx.roundRect(-botCapW / 2, -botCapH / 2, botCapW, botCapH, botCapR);
-          ctx.fill();
+            // Flickering Tongue
+            if (frame % 20 < 10) {
+              ctx.strokeStyle = '#ff0033';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(0, -12);
+              ctx.lineTo(0, -18);
+              ctx.lineTo(-2, -21);
+              ctx.moveTo(0, -18);
+              ctx.lineTo(2, -21);
+              ctx.stroke();
+            }
+          } else if (bot.creatureType === 'centipede') {
+            // Centipede Head & Legs
+            ctx.fillStyle = bot.color;
+            ctx.beginPath();
+            ctx.arc(0, -4, 8, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-          ctx.beginPath();
-          ctx.roundRect(-botCapW / 2 + 2, -botCapH / 2 + 2, botCapW - 4, botCapH / 2, botCapR);
-          ctx.fill();
+            // Legs protruding
+            ctx.strokeStyle = '#ffbb00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-8, -4); ctx.lineTo(-14, -8);
+            ctx.moveTo(8, -4); ctx.lineTo(14, -8);
+            ctx.moveTo(-8, 2); ctx.lineTo(-14, 6);
+            ctx.moveTo(8, 2); ctx.lineTo(14, 6);
+            ctx.stroke();
+          } else if (bot.creatureType === 'ant') {
+            // Ant Head, Mandibles, Antennae
+            ctx.fillStyle = bot.color;
+            ctx.beginPath();
+            ctx.arc(0, -6, 6, 0, Math.PI * 2);
+            ctx.fill();
 
-          const botEyeY = -botCapH / 4;
-          const botEyeOffset = botCapW / 3;
-          const botEyeRadius = botCapW / 5;
-          const botPupilRadius = botEyeRadius / 2;
+            // Antennae
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(-2, -10); ctx.lineTo(-7, -16);
+            ctx.moveTo(2, -10); ctx.lineTo(7, -16);
+            ctx.stroke();
+          } else if (bot.creatureType === 'slug') {
+            // Slug Rounded Head & Stalk Eyes
+            ctx.fillStyle = bot.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, 9, 0, Math.PI * 2);
+            ctx.fill();
 
-          [-botEyeOffset, botEyeOffset].forEach((offsetX) => {
+            // Eye stalks
+            ctx.strokeStyle = bot.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-3, -4); ctx.lineTo(-6, -12);
+            ctx.moveTo(3, -4); ctx.lineTo(6, -12);
+            ctx.stroke();
+
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(offsetX, botEyeY, botEyeRadius, 0, Math.PI * 2);
+            ctx.arc(-6, -12, 2, 0, Math.PI * 2);
+            ctx.arc(6, -12, 2, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // Default Craft Head
+            const botCapW = 12;
+            const botCapH = 24;
+            const botCapR = botCapW / 2;
+
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = bot.color;
+            ctx.fillStyle = bot.color;
+
+            ctx.beginPath();
+            ctx.roundRect(-botCapW / 2, -botCapH / 2, botCapW, botCapH, botCapR);
             ctx.fill();
 
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.beginPath();
-            ctx.arc(offsetX, botEyeY, botPupilRadius, 0, Math.PI * 2);
+            ctx.roundRect(-botCapW / 2 + 2, -botCapH / 2 + 2, botCapW - 4, botCapH / 2, botCapR);
             ctx.fill();
-          });
+
+            const botEyeY = -botCapH / 4;
+            const botEyeOffset = botCapW / 3;
+            const botEyeRadius = botCapW / 5;
+            const botPupilRadius = botEyeRadius / 2;
+
+            [-botEyeOffset, botEyeOffset].forEach((offsetX) => {
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(offsetX, botEyeY, botEyeRadius, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#000000';
+              ctx.beginPath();
+              ctx.arc(offsetX, botEyeY, botPupilRadius, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          }
 
           ctx.restore();
 
           ctx.shadowBlur = 0;
-          ctx.fillStyle = bot.color;
+          ctx.fillStyle = bot.isFastPasser ? '#ff0055' : bot.color;
           ctx.font = '700 10px "JetBrains Mono", monospace';
           ctx.fillText(bot.name, bot.x - 14, bot.y - 14);
 
@@ -972,7 +1066,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         }
       });
 
-      // RENDER PLAYER TRAIL (Phase Shift visuals included)
+      // RENDER PLAYER TRAIL
       if (player.trail.length > 2) {
         ctx.save();
         ctx.lineCap = 'round';

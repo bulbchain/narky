@@ -2350,7 +2350,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         border
         border-[#00f5d4]/40
         shadow-[0_0_30px_rgba(0,245,212,0.15),0_8px_40px_rgba(0,0,0,0.9)]
-        overflow-hidden
+        ${isFullscreen ? 'overflow-visible' : 'overflow-hidden'}
         flex
         flex-col
         justify-between
@@ -2391,18 +2391,15 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       ========================================================== */}
 
       <div
-        className="
-          absolute
-          inset-x-0
-          bottom-0
-          z-30
-          md:hidden
-          pointer-events-none
-          px-4
-        "
+        className={
+          `absolute inset-x-0 z-30 pointer-events-none px-4 ${
+            isFullscreen ? 'bottom-8 md:bottom-10' : 'bottom-0 md:bottom-2'
+          }`
+        }
         style={{
-          paddingBottom:
-            'calc(14px + env(safe-area-inset-bottom))',
+          paddingBottom: isFullscreen
+            ? 'calc(32px + env(safe-area-inset-bottom))'
+            : 'calc(18px + env(safe-area-inset-bottom))',
         }}
         aria-label="Mobile game controls"
       >
@@ -2767,7 +2764,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
             left-1/2
             -translate-x-1/2
             z-20
-            md:hidden
             pointer-events-none
             whitespace-nowrap
           "
@@ -2905,162 +2901,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       )}
 
-      {/* =========================================================
-          DESKTOP RADAR
-      ========================================================== */}
-
-      <div
-        className="
-          hidden
-          md:flex
-
-          pointer-events-auto
-
-          absolute
-          bottom-4
-          right-4
-
-          z-50
-
-          w-16
-          h-16
-
-          sm:w-20
-          sm:h-20
-
-          md:w-24
-          md:h-24
-
-          items-center
-          justify-center
-
-          cursor-pointer
-          rounded-full
-        "
-        onClick={(e) => {
-          e.preventDefault();
-
-          sounds.playBeep(920);
-
-          setAlertText(
-            'RADAR SWEEP ACTIVE'
-          );
-
-          setTimeout(() => {
-            setAlertText(
-              'TRAIL COLLISION'
-            );
-          }, 2000);
-        }}
-        role="button"
-        aria-label="Activate radar sweep"
-      >
-        <svg
-          className="
-            absolute
-            inset-0
-            w-full
-            h-full
-          "
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke="#00f5d4"
-            strokeWidth="2"
-            strokeOpacity="0.9"
-          />
-        </svg>
-
-        <div
-          className="
-            w-6
-            h-6
-
-            sm:w-7
-            sm:h-7
-
-            md:w-7
-            md:h-7
-
-            rounded-full
-
-            bg-[#00f5d4]
-
-            shadow-[0_0_20px_#00f5d4]
-
-            border-2
-            border-white
-
-            relative
-
-            flex
-            items-center
-            justify-center
-
-            animate-pulse
-          "
-        />
-      </div>
-
-      {/* =========================================================
-          DESKTOP CONTROL HINT
-      ========================================================== */}
-
-      {hintVisible && (
-        <div
-          className="
-            absolute
-            bottom-16
-            left-1/2
-            -translate-x-1/2
-
-            pointer-events-none
-
-            z-10
-
-            transition-opacity
-            duration-500
-
-            opacity-70
-
-            group-hover/arena:opacity-30
-
-            text-center
-          "
-        >
-          <span
-            className="
-              font-mono
-              text-[9px]
-              tracking-widest
-              text-[#26fedc]
-              uppercase
-
-              px-3
-              py-1
-
-              rounded
-
-              bg-[#080f18]/80
-
-              border
-              border-[#00f5d4]/30
-
-              backdrop-blur-sm
-
-              shadow-[0_0_10px_rgba(0,245,212,0.2)]
-            "
-          >
-            MOVE MOUSE TO STEER · HOLD
-            CLICK TO BOOST
-          </span>
-        </div>
-      )}
 
       {/* =========================================================
           TOP HUD
@@ -3448,97 +3288,6 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         </div>
       </div>
 
-      {/* =========================================================
-          BOTTOM DESKTOP CONTROLS
-      ========================================================== */}
-
-      <div
-        className="
-          relative
-          z-10
-
-          w-full
-
-          flex
-          items-end
-          justify-between
-
-          pointer-events-none
-
-          mt-auto
-
-          pt-10
-
-          pb-2
-          md:pb-0
-        "
-      >
-        {/* RESTART */}
-        <div
-          className="
-            pointer-events-auto
-          "
-        >
-          <button
-            onClick={restartGame}
-            type="button"
-            className="
-              hidden
-              md:flex
-
-              px-4
-              py-1.5
-
-              rounded
-
-              bg-[#181a1a]/90
-
-              hover:bg-[#2b2216]
-
-              border
-              border-[#f9bd22]/60
-
-              hover:border-[#f9bd22]
-
-              text-[#ffdf9f]
-
-              font-mono
-              text-[10px]
-
-              uppercase
-
-              tracking-widest
-
-              shadow-[0_0_10px_rgba(249,189,34,0.25)]
-
-              hover:shadow-[0_0_15px_rgba(249,189,34,0.5)]
-
-              transition-all
-
-              items-center
-
-              gap-1.5
-
-              cursor-pointer
-
-              active:scale-95
-            "
-          >
-            <RotateCcw
-              className="
-                w-3
-                h-3
-
-                text-[#f9bd22]
-              "
-            />
-
-            <span>
-              RESTART
-            </span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

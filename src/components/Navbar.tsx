@@ -125,14 +125,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               sounds.playBeep(840);
               onOpenWalletModal();
             }}
-            className="font-display text-[9px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-2 sm:px-5 sm:py-2.5 bg-[#00f5d4] text-[#00382f] rounded hover:bg-[#26fedc] shadow-[0_0_20px_rgba(0,245,212,0.45)] hover:shadow-[0_0_30px_rgba(0,245,212,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 sm:gap-2 max-w-[140px] sm:max-w-none"
+            className="font-display text-[9px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-2 sm:px-5 sm:py-2.5 bg-[#00f5d4] text-[#00382f] rounded hover:bg-[#26fedc] shadow-[0_0_20px_rgba(0,245,212,0.45)] hover:shadow-[0_0_30px_rgba(0,245,212,0.7)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-1.5 sm:gap-2 max-w-[160px] sm:max-w-none"
           >
             <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span className="truncate">
-              {wallet.isConnected
-                ? window.innerWidth < 640
-                  ? 'WALLET'
-                  : `${wallet.address?.slice(0, 4)}...${wallet.address?.slice(-4)} (${wallet.solBalance} SOL)`
+              {wallet.isConnected && wallet.address
+                ? `${wallet.address.slice(0, 4)}...${wallet.address.slice(-4)} (${wallet.solBalance} SOL)`
                 : 'WALLET'}
             </span>
           </button>

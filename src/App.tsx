@@ -168,7 +168,7 @@ export default function App() {
             <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 {/* Left: Flight Terminal Controls Card (5 cols) */}
-                <div className="lg:col-span-5 flex flex-col">
+                <div className="lg:col-span-5 flex h-full flex-col">
                   <FlightTerminal
                     callsign={callsign}
                     setCallsign={setCallsign}
@@ -179,7 +179,7 @@ export default function App() {
                 </div>
 
                 {/* Right: Interactive 60FPS Live Vector Arena Canvas (7 cols) */}
-                <div className="lg:col-span-7 flex flex-col min-h-[460px] lg:min-h-[540px]">
+                <div className="lg:col-span-7 flex h-full flex-col min-h-[460px] lg:min-h-[540px]">
                   <ArenaCanvas
                     callsign={callsign}
                     onKillsUpdate={handleKillsUpdate}

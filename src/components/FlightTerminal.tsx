@@ -41,7 +41,7 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-between p-6 lg:p-8 rounded-xl bg-[#19202a]/90 border border-[#00f5d4]/20 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+    <div className="flex h-full flex-col justify-between p-6 lg:p-8 rounded-xl bg-[#19202a]/90 border border-[#00f5d4]/20 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col gap-4">
         {/* Card Header & Status */}
         <div className="flex items-center justify-between">

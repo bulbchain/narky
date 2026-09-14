@@ -1,7 +1,15 @@
 import React from 'react';
 import { ArenaMode } from '../types';
 import { sounds } from '../audio';
-import { Gamepad2, Shuffle, Rocket, ShieldCheck, Flame } from 'lucide-react';
+import {
+  Gamepad2,
+  Shuffle,
+  Rocket,
+  ShieldCheck,
+  Flame,
+  Lock,
+  Zap,
+} from 'lucide-react';
 
 interface FlightTerminalProps {
   callsign: string;
@@ -12,18 +20,18 @@ interface FlightTerminalProps {
 }
 
 const RANDOM_CALLSIGNS = [
-  'CYBER_GHOST',
-  'VORTEX_9',
-  'NEON_ECHO',
-  'HYPER_DRIFT',
-  'SOLAR_LANCE',
-  'VOID_WALKER',
-  'APEX_SURGE',
-  'ZERO_PULSE',
-  'PHANTOM_07',
-  'QUANTUM_AXIS',
-  'CHRONO_JET',
-  'NOVA_REAPER',
+  'NEON_WORM',
+  'VOID_WORM',
+  'NARKY_07',
+  'WORM_LORD',
+  'GLOW_CRAWLER',
+  'BITE_FORCE',
+  'TUBE_TERROR',
+  'SNAKE_BYTE',
+  'WORM_X',
+  'DARK_CRAWLER',
+  'NEON_BITE',
+  'LAST_WORM',
 ];
 
 export const FlightTerminal: React.FC<FlightTerminalProps> = ({
@@ -35,145 +43,252 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
 }) => {
   const handleRandomize = () => {
     sounds.playBeep(700);
+
     const filtered = RANDOM_CALLSIGNS.filter((c) => c !== callsign);
     const pick = filtered[Math.floor(Math.random() * filtered.length)];
+
     setCallsign(pick);
   };
 
   return (
-    <div className="flex h-full flex-col justify-between p-6 lg:p-8 rounded-xl bg-[#19202a]/90 border border-[#00f5d4]/20 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+    <div className="flex h-full flex-col justify-between rounded-xl border border-[#00f5d4]/20 bg-[#19202a]/90 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-2xl lg:p-8">
+
       <div className="flex flex-col gap-4">
-        {/* Card Header & Status */}
+
+        {/* =========================================================
+            HEADER
+        ========================================================= */}
+
         <div className="flex items-center justify-between">
+
           <div className="flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-[#00f5d4]" />
-            <span className="font-mono text-[11px] font-bold text-[#00f5d4] uppercase tracking-widest">
-              FLIGHT TERMINAL
+            <Gamepad2 className="h-5 w-5 text-[#00f5d4]" />
+
+            <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[#00f5d4]">
+              WORM TERMINAL
             </span>
           </div>
-          <span className="font-mono text-[10px] text-[#83948f] tracking-wider">NET_PING: 21MS</span>
+
+          <span className="font-mono text-[10px] tracking-wider text-[#83948f]">
+            ARENA: ONLINE
+          </span>
+
         </div>
 
-        {/* Callsign / Handle Input with Randomizer */}
-        <div className="flex flex-col gap-1.5 mt-1">
+        {/* Small status line */}
+        <div className="flex items-center gap-2 border-b border-[#3a4a46]/30 pb-3">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00f5d4] shadow-[0_0_8px_rgba(0,245,212,0.8)]" />
+
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#83948f]">
+            Neon soil detected · Arena ready
+          </span>
+        </div>
+
+        {/* =========================================================
+            WORM NAME
+        ========================================================= */}
+
+        <div className="mt-1 flex flex-col gap-1.5">
+
           <label className="font-mono text-[10px] uppercase tracking-wider text-[#b9cac4]">
-            PILOT CALLSIGN
+            WORM NAME
           </label>
+
           <div className="relative flex items-center">
+
             <input
               type="text"
               maxLength={14}
               value={callsign}
-              onChange={(e) => setCallsign(e.target.value.toUpperCase().replace(/\s+/g, '_'))}
-              placeholder="ENTER HANDLE..."
-              className="w-full bg-[#080f18] text-[#d7fff3] font-mono text-sm px-4 py-3 rounded outline-none border border-[#3a4a46]/70 focus:border-[#00f5d4] focus:bg-[#151c26] transition-all uppercase placeholder-[#83948f]/50 shadow-inner"
+              onChange={(e) =>
+                setCallsign(
+                  e.target.value.toUpperCase().replace(/\s+/g, '_')
+                )
+              }
+              placeholder="NAME YOUR WORM..."
+              className="w-full rounded border border-[#3a4a46]/70 bg-[#080f18] px-4 py-3 font-mono text-sm uppercase text-[#d7fff3] outline-none shadow-inner transition-all placeholder:text-[#83948f]/50 focus:border-[#00f5d4] focus:bg-[#151c26]"
             />
+
             <button
               type="button"
               onClick={handleRandomize}
-              title="Randomize Callsign"
-              className="absolute right-2 px-2.5 py-1 rounded bg-[#2e353f]/80 hover:bg-[#00f5d4] hover:text-[#00382f] text-[#00f5d4] transition-all text-xs flex items-center gap-1 font-mono font-bold"
+              title="Randomize Worm Name"
+              className="absolute right-2 flex items-center gap-1 rounded bg-[#2e353f]/80 px-2.5 py-1 font-mono text-xs font-bold text-[#00f5d4] transition-all hover:bg-[#00f5d4] hover:text-[#00382f]"
             >
-              <Shuffle className="w-3.5 h-3.5" />
+              <Shuffle className="h-3.5 w-3.5" />
               <span className="text-[10px]">RND</span>
             </button>
+
           </div>
+
+          <span className="font-mono text-[9px] text-[#83948f]">
+            Pick a name. Then go make it famous.
+          </span>
+
         </div>
 
-        {/* Arena Mode Selector Tabs */}
-        <div className="flex flex-col gap-1.5 mt-1">
+        {/* =========================================================
+            GAME MODE
+        ========================================================= */}
+
+        <div className="mt-1 flex flex-col gap-1.5">
+
           <label className="font-mono text-[10px] uppercase tracking-wider text-[#b9cac4]">
-            ENGAGEMENT PROTOCOL
+            CHOOSE YOUR HUNT
           </label>
+
           <div className="grid grid-cols-2 gap-2">
-            {/* Free Arena Tab */}
+
+            {/* FREE ARENA */}
+
             <button
               type="button"
               onClick={() => {
                 sounds.playBeep(640);
                 setArenaMode('free');
               }}
-              className={`flex flex-col text-left p-2.5 rounded transition-all ${
+              className={`flex flex-col rounded p-2.5 text-left transition-all ${
                 arenaMode === 'free'
-                  ? 'bg-[#2e353f]/90 text-[#00f5d4] border border-[#00f5d4]/40 shadow-md'
-                  : 'bg-[#151c26] text-[#b9cac4] hover:text-[#dce3f0] border border-transparent'
+                  ? 'border border-[#00f5d4]/40 bg-[#2e353f]/90 text-[#00f5d4] shadow-md'
+                  : 'border border-transparent bg-[#151c26] text-[#b9cac4] hover:text-[#dce3f0]'
               }`}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-display text-xs uppercase font-bold text-[#d7fff3]">FREE ARENA</span>
-                <span className="w-2 h-2 rounded-full bg-[#00dfc1] shadow-[0_0_6px_#00dfc1]" />
+
+              <div className="flex w-full items-center justify-between">
+
+                <span className="font-display text-xs font-bold uppercase text-[#d7fff3]">
+                  FREE ARENA
+                </span>
+
+                <span className="h-2 w-2 rounded-full bg-[#00dfc1] shadow-[0_0_6px_#00dfc1]" />
+
               </div>
-              <span className="font-mono text-[9px] text-[#b9cac4] mt-1 leading-tight">
-                Instant play · Zero wallet · Global glory
+
+              <span className="mt-1 font-mono text-[9px] leading-tight text-[#b9cac4]">
+                Free to crawl · Eat · Grow · Survive
               </span>
+
             </button>
 
-            {/* Staked Run Tab */}
+            {/* STAKED RUN - COMING SOON */}
+
             <button
               type="button"
               onClick={() => {
                 sounds.playBeep(680);
                 setArenaMode('staked');
               }}
-              className={`flex flex-col text-left p-2.5 rounded transition-all ${
+              className={`relative flex flex-col rounded p-2.5 text-left transition-all ${
                 arenaMode === 'staked'
-                  ? 'bg-[#2e353f]/90 text-[#f9bd22] border border-[#f9bd22]/40 shadow-md'
-                  : 'bg-[#151c26] text-[#b9cac4] hover:text-[#dce3f0] border border-transparent'
+                  ? 'border border-[#f9bd22]/40 bg-[#2e353f]/90 shadow-md'
+                  : 'border border-transparent bg-[#151c26] hover:border-[#f9bd22]/20'
               }`}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-display text-xs uppercase font-bold text-[#f9bd22]">STAKED RUN</span>
-                <Flame className="w-3.5 h-3.5 text-[#f9bd22]" />
+
+              <div className="flex w-full items-center justify-between">
+
+                <span className="font-display text-xs font-bold uppercase text-[#f9bd22]">
+                  STAKED RUN
+                </span>
+
+                <Lock className="h-3.5 w-3.5 text-[#f9bd22]/80" />
+
               </div>
-              <span className="font-mono text-[9px] text-[#83948f] mt-1 leading-tight">
-                0.1 - 1.0 SOL · Hunt pilots · Extract loot
+
+              <span className="mt-1 font-mono text-[9px] leading-tight text-[#83948f]">
+                SOL battles · Bigger rewards
               </span>
+
+              {/* Coming soon label */}
+              <span className="mt-2 inline-flex w-fit items-center gap-1 rounded border border-[#f9bd22]/20 bg-[#f9bd22]/5 px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wider text-[#f9bd22]/80">
+                <Zap className="h-2.5 w-2.5" />
+                Coming Soon
+              </span>
+
             </button>
+
           </div>
         </div>
 
-        {/* Mode Info Context Banner */}
-        <div className="p-3 rounded bg-[#080f18]/80 text-[#b9cac4] font-mono text-xs flex items-start gap-2 border border-[#3a4a46]/40">
+        {/* =========================================================
+            MODE INFORMATION
+        ========================================================= */}
+
+        <div className="flex items-start gap-2 rounded border border-[#3a4a46]/40 bg-[#080f18]/80 p-3 font-mono text-xs text-[#b9cac4]">
+
           {arenaMode === 'free' ? (
             <>
-              <ShieldCheck className="w-4 h-4 text-[#00dfc1] mt-0.5 shrink-0" />
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#00dfc1]" />
+
               <span className="text-[11px] leading-relaxed">
-                Spawn immediately in Sector-09 with full telemetry tracking. Climb the hourly leaderboard.
+                Drop straight into the arena. Eat glowing food, grow your
+                worm, dodge rivals, and climb the leaderboard.
               </span>
             </>
           ) : (
             <>
-              <Flame className="w-4 h-4 text-[#f9bd22] mt-0.5 shrink-0" />
+              <Flame className="mt-0.5 h-4 w-4 shrink-0 text-[#f9bd22]" />
+
               <span className="text-[11px] leading-relaxed text-[#ffd57d]">
-                Deposit 0.1 - 1.0 SOL into non-custodial smart escrow. Harvest defeated pilots and extract safely.
+               
+                SOL entry, rewards, and competitive worm battles will be
+                activated in a future release.
               </span>
             </>
           )}
+
         </div>
 
-        {/* Massive Play CTA Button */}
+        {/* =========================================================
+            PLAY BUTTON
+        ========================================================= */}
+
         <button
           type="button"
           onClick={() => {
             sounds.playBoostSound();
             onEnterArena();
           }}
-          className="w-full py-4 mt-1 rounded bg-[#00f5d4] text-[#00382f] font-display text-base sm:text-lg font-bold tracking-widest uppercase shadow-[0_0_30px_rgba(0,245,212,0.6)] hover:shadow-[0_0_45px_rgba(0,245,212,0.85)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded bg-[#00f5d4] py-4 font-display text-base font-bold uppercase tracking-widest text-[#00382f] shadow-[0_0_30px_rgba(0,245,212,0.6)] transition-all hover:scale-[1.01] hover:shadow-[0_0_45px_rgba(0,245,212,0.85)] active:scale-[0.99] sm:text-lg"
         >
-          <Rocket className="w-5 h-5" />
-          <span>ENTER ARENA · PLAY</span>
+
+          <Rocket className="h-5 w-5" />
+
+          <span>
+            ENTER ARENA · CRAWL
+          </span>
+
         </button>
+
       </div>
 
-      {/* Controls Legend Bar */}
-      <div className="mt-6 pt-3 bg-[#080f18]/50 p-3 rounded border border-[#3a4a46]/30 flex flex-col gap-1">
-        <span className="font-mono text-[9px] text-[#83948f] tracking-wider uppercase">
-          FLIGHT DIRECTIVES:
-        </span>
-        <p className="font-mono text-[#26fedc] text-[10px] leading-tight">
-          Drag or move to steer · Press and hold to boost · Never touch another line
+      {/* =========================================================
+          CONTROLS
+      ========================================================= */}
+
+      <div className="mt-6 flex flex-col gap-1 rounded border border-[#3a4a46]/30 bg-[#080f18]/50 p-3">
+
+        <div className="flex items-center gap-2">
+
+          <span className="font-mono text-[9px] uppercase tracking-wider text-[#83948f]">
+            WORM CONTROLS:
+          </span>
+
+          <span className="h-1 w-1 rounded-full bg-[#00f5d4]" />
+
+          <span className="font-mono text-[9px] uppercase tracking-wider text-[#00f5d4]/70">
+            LIVE
+          </span>
+
+        </div>
+
+        <p className="font-mono text-[10px] leading-tight text-[#26fedc]">
+          Drag or move to steer · Hold to boost · Eat the glowing orbs ·
+          Don't hit another worm
         </p>
+
       </div>
+
     </div>
   );
 };

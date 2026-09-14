@@ -20,6 +20,7 @@ import { TokenRewardsView } from './components/TokenRewardsView';
 import { WalletModal } from './components/WalletModal';
 import { ProfileModal } from './components/ProfileModal';
 import { FullscreenArenaModal } from './components/FullscreenArenaModal';
+import { NarkyIntroBanner } from './components/NarkyIntroBanner';
 import { sounds } from './audio';
 
 export default function App() {
@@ -164,6 +165,8 @@ export default function App() {
       <main className="flex-1 flex flex-col pt-32 md:pt-32 xl:pt-24">
         {activeTab === 'play-now' && (
           <div className="flex flex-col">
+            <NarkyIntroBanner />
+
             {/* HERO SECTION: Flight Terminal (Left) + Interactive Vector Arena (Right) */}
             <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

@@ -41,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const navItems: { id: NavTab; label: string }[] = [
-    { id: 'play-now', label: 'PLAY NOW' },
+    { id: 'play-now', label: 'Home' },
     { id: 'how-it-works', label: 'HOW IT WORKS' },
     { id: 'leaderboard', label: 'LEADERBOARD' },
   ];

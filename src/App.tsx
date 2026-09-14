@@ -26,6 +26,7 @@ import { sounds } from './audio';
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('play-now');
   const [callsign, setCallsign] = useState<string>('CYBER_GHOST');
+  const [wormColor, setWormColor] = useState<string>('#00f5d4');
   const [arenaMode, setArenaMode] = useState<ArenaMode>('free');
 
   // Real-time telemetry tracking from game canvas
@@ -175,6 +176,7 @@ export default function App() {
                   <FlightTerminal
                     callsign={callsign}
                     setCallsign={setCallsign}
+                    setWormColor={setWormColor}
                     arenaMode={arenaMode}
                     setArenaMode={setArenaMode}
                     onEnterArena={handleLaunchArena}
@@ -185,6 +187,7 @@ export default function App() {
                 <div className="lg:col-span-7 flex h-full flex-col min-h-[460px] lg:min-h-[540px]">
                   <ArenaCanvas
                     callsign={callsign}
+                    wormColor={wormColor}
                     onKillsUpdate={handleKillsUpdate}
                     onScoreUpdate={handleScoreUpdate}
                     onToggleFullscreen={handleLaunchArena}

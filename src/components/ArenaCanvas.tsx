@@ -18,6 +18,7 @@ import {
 
 interface ArenaCanvasProps {
   callsign: string;
+  wormColor?: string;
   onKillsUpdate?: (kills: number) => void;
   onScoreUpdate?: (score: number) => void;
   isFullscreen?: boolean;
@@ -99,6 +100,7 @@ interface BotCraft {
 
 export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   callsign,
+  wormColor = '#00f5d4',
   onKillsUpdate,
   onScoreUpdate,
   isFullscreen = false,
@@ -296,7 +298,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       trail: [] as TrailPoint[],
       maxTrail: 34,
       thickness: 7.5,
-      color: '#00f5d4',
+      color: wormColor,
     };
 
     const camera = {
@@ -735,7 +737,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       if (!isPausedRef.current && boostActive && !hasOverclock) {
         localScore = Math.max(10, localScore - 0.2);
-        if (frame % 3 === 0) emitSparks(player.x, player.y, '#00f5d4', 2, 1.2);
+        if (frame % 3 === 0) emitSparks(player.x, player.y, player.color, 2, 1.2);
       }
 
       for (let i = orbs.length - 1; i >= 0; i--) {
@@ -1074,7 +1076,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.globalAlpha = hasPhase ? 0.45 : 1.0;
 
         ctx.shadowBlur = boostActive ? 26 : 18;
-        ctx.shadowColor = hasPhase ? '#3b82f6' : boostActive ? '#26fedc' : player.color;
+        ctx.shadowColor = hasPhase ? '#3b82f6' : player.color;
         ctx.strokeStyle = hasPhase ? '#3b82f6' : player.color;
         ctx.lineWidth = boostActive ? player.thickness + 2 : player.thickness;
 
@@ -1100,7 +1102,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         const capR = capW / 2;
 
         ctx.shadowBlur = boostActive ? 20 : 12;
-        ctx.shadowColor = boostActive ? '#26fedc' : player.color;
+        ctx.shadowColor = player.color;
         ctx.fillStyle = player.color;
 
         ctx.beginPath();
@@ -1132,7 +1134,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         ctx.restore();
 
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#00f5d4';
+        ctx.fillStyle = player.color;
         ctx.font = '700 10px "JetBrains Mono", monospace';
         ctx.fillText(callsign || 'CYBER_GHOST', player.x - 18, player.y - 16);
 
@@ -1224,7 +1226,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [callsign, onKillsUpdate, onScoreUpdate]);
+  }, [callsign, wormColor, onKillsUpdate, onScoreUpdate]);
 
   return (
     <div

@@ -14,6 +14,7 @@ import {
 interface FlightTerminalProps {
   callsign: string;
   setCallsign: (val: string) => void;
+  setWormColor?: (color: string) => void;
   arenaMode: ArenaMode;
   setArenaMode: (mode: ArenaMode) => void;
   onEnterArena: () => void;
@@ -34,9 +35,21 @@ const RANDOM_CALLSIGNS = [
   'LAST_WORM',
 ];
 
+const WORM_COLORS = [
+  '#00f5d4', // Neon Cyan
+  '#ff0055', // Electric Pink
+  '#a855f7', // Neon Purple
+  '#2bd966', // Vibrant Green
+  '#ffd57d', // Warm Gold
+  '#ff5500', // Crimson Orange
+  '#00c3ff', // Deep Cyan
+  '#e60067', // Hot Pink
+];
+
 export const FlightTerminal: React.FC<FlightTerminalProps> = ({
   callsign,
   setCallsign,
+  setWormColor,
   arenaMode,
   setArenaMode,
   onEnterArena,
@@ -44,10 +57,14 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
   const handleRandomize = () => {
     sounds.playBeep(700);
 
-    const filtered = RANDOM_CALLSIGNS.filter((c) => c !== callsign);
-    const pick = filtered[Math.floor(Math.random() * filtered.length)];
+    const filteredNames = RANDOM_CALLSIGNS.filter((c) => c !== callsign);
+    const pickName = filteredNames[Math.floor(Math.random() * filteredNames.length)];
+    setCallsign(pickName);
 
-    setCallsign(pick);
+    if (setWormColor) {
+      const pickColor = WORM_COLORS[Math.floor(Math.random() * WORM_COLORS.length)];
+      setWormColor(pickColor);
+    }
   };
 
   return (
@@ -112,7 +129,7 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
             <button
               type="button"
               onClick={handleRandomize}
-              title="Randomize Worm Name"
+              title="Randomize Worm Name & Color"
               className="absolute right-2 flex items-center gap-1 rounded bg-[#2e353f]/80 px-2.5 py-1 font-mono text-xs font-bold text-[#00f5d4] transition-all hover:bg-[#00f5d4] hover:text-[#00382f]"
             >
               <Shuffle className="h-3.5 w-3.5" />

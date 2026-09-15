@@ -8,6 +8,7 @@ interface FullscreenArenaModalProps {
   isOpen: boolean;
   onClose: () => void;
   callsign: string;
+  wormColor?: string;
   onKillsUpdate?: (k: number) => void;
   onScoreUpdate?: (s: number) => void;
   soundMuted: boolean;
@@ -18,6 +19,7 @@ export const FullscreenArenaModal: React.FC<FullscreenArenaModalProps> = ({
   isOpen,
   onClose,
   callsign,
+  wormColor,
   onKillsUpdate,
   onScoreUpdate,
   soundMuted,
@@ -73,6 +75,7 @@ export const FullscreenArenaModal: React.FC<FullscreenArenaModalProps> = ({
       <div className="flex-1 w-full h-full relative overflow-hidden">
         <ArenaCanvas
           callsign={callsign}
+          wormColor={wormColor}
           onKillsUpdate={onKillsUpdate}
           onScoreUpdate={onScoreUpdate}
           isFullscreen={true}

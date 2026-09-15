@@ -10,7 +10,9 @@ import { sounds } from '../audio';
 import {
   Maximize2,
   Minimize2,
+  Play,
   RotateCcw,
+  Share2,
   Zap,
   Shield,
   Magnet,
@@ -107,11 +109,18 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   onToggleFullscreen,
 }) => {
   const restartRef = React.useRef<() => void>(() => {});
-  const isPausedRef = React.useRef(false);
+  const isPausedRef = React.useRef(true);
 
   const [shareAvailable, setShareAvailable] = React.useState(false);
   const [lastScore, setLastScore] = React.useState<number | null>(null);
   const [showDeathModal, setShowDeathModal] = React.useState(false);
+  const [isPaused, setIsPaused] = React.useState(true);
+
+  const playGame = () => {
+    sounds.playBeep(700);
+    isPausedRef.current = false;
+    setIsPaused(false);
+  };
 
   const WEBSITE_URL = 'https://playnarky.lol';
   const TWITTER_URL = 'https://x.com/playnarky';
@@ -413,6 +422,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       setLastScore(null);
       setShowDeathModal(false);
       isPausedRef.current = false;
+      setIsPaused(false);
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -724,6 +734,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         isBoosting = false;
         mobileInput.boost = false;
         isPausedRef.current = true;
+        setIsPaused(true);
 
         setLastScore(Math.floor(localScore));
         setShareAvailable(true);
@@ -893,6 +904,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
               isBoosting = false;
               mobileInput.boost = false;
               isPausedRef.current = true;
+              setIsPaused(true);
 
               setLastScore(Math.floor(localScore));
               setShareAvailable(true);
@@ -1241,8 +1253,19 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     >
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block cursor-crosshair z-0" />
 
+      {isPaused && !showDeathModal && (
+        <button
+          type="button"
+          onClick={playGame}
+          className="absolute top-[58%] left-1/2 z-30 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 border border-[#00f5d4]/60 bg-transparent px-5 py-2 font-mono text-xs font-bold tracking-[0.24em] text-[#d7fff3] uppercase shadow-[0_0_18px_rgba(0,245,212,0.28)] backdrop-blur-sm transition-all hover:border-[#00f5d4] hover:bg-[#00f5d4]/10 hover:text-[#00f5d4]"
+        >
+          <Play className="h-4 w-4 fill-current" />
+          Play
+        </button>
+      )}
+
       {/* ACTIVE POWER-UP HUD */}
-      <div className="absolute top-16 left-4 z-20 flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-[132px] left-4 z-20 flex flex-col gap-2 pointer-events-none md:top-[166px]">
         {activeBuffs.map((buff) => (
           <div
             key={buff.type}
@@ -1375,17 +1398,19 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
       {/* DEATH MODAL */}
       {showDeathModal && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="bg-[#0d1722]/95 border border-[#00f5d4]/20 rounded-lg p-6 w-[320px] text-center shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-            <div className="font-mono text-[14px] font-bold text-[#ffb2b7]">You Were Eliminated</div>
-            <div className="font-mono text-[12px] text-[#dce3f0] mt-2">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/5 backdrop-blur-[1px]">
+          <div className="w-[320px] rounded-2xl border border-[#00f5d4]/35 bg-[#0d1722]/25 p-6 text-center shadow-[0_10px_30px_rgba(0,0,0,0.3),0_0_24px_rgba(0,245,212,0.1)] backdrop-blur-sm">
+            <div className="font-mono text-[14px] font-bold uppercase tracking-wider text-[#ffb2b7] drop-shadow-[0_0_8px_rgba(255,178,183,0.55)]">You Were Eliminated</div>
+            <div className="mt-2 font-mono text-[12px] text-[#dce3f0]">
               Final Score: {lastScore?.toLocaleString() || 0}
             </div>
             <div className="mt-4 flex items-center justify-center gap-3">
-              <button onClick={shareThenRestart} className="px-4 py-2 rounded bg-[#1d9bf0]/95 hover:bg-[#1290e8] text-white font-mono text-[12px]">
+              <button onClick={shareThenRestart} className="flex items-center gap-2 rounded-lg border border-[#70bfff]/55 bg-[#1d9bf0]/25 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#70bfff] hover:bg-[#1d9bf0]/55 hover:shadow-[0_0_16px_rgba(112,191,255,0.28)]">
+                <Share2 className="h-4 w-4" />
                 Share on X
               </button>
-              <button onClick={playAgain} className="px-4 py-2 rounded bg-[#00f5d4]/95 hover:bg-[#26fedc] text-black font-mono text-[12px]">
+              <button onClick={playAgain} className="flex items-center gap-2 rounded-lg border border-[#00f5d4]/65 bg-[#00f5d4]/25 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wide text-[#d7fff3] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[#00f5d4] hover:bg-[#00f5d4]/55 hover:text-[#00382f] hover:shadow-[0_0_16px_rgba(0,245,212,0.28)]">
+                <RotateCcw className="h-4 w-4" />
                 Play Again
               </button>
             </div>

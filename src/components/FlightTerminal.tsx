@@ -20,30 +20,19 @@ interface FlightTerminalProps {
   onEnterArena: () => void;
 }
 
-const RANDOM_CALLSIGNS = [
-  'NEON_WORM',
-  'VOID_WORM',
-  'NARKY_07',
-  'WORM_LORD',
-  'GLOW_CRAWLER',
-  'BITE_FORCE',
-  'TUBE_TERROR',
-  'SNAKE_BYTE',
-  'WORM_X',
-  'DARK_CRAWLER',
-  'NEON_BITE',
-  'LAST_WORM',
-];
-
-const WORM_COLORS = [
-  '#00f5d4', // Neon Cyan
-  '#ff0055', // Electric Pink
-  '#a855f7', // Neon Purple
-  '#2bd966', // Vibrant Green
-  '#ffd57d', // Warm Gold
-  '#ff5500', // Crimson Orange
-  '#00c3ff', // Deep Cyan
-  '#e60067', // Hot Pink
+const RANDOM_WORMS = [
+  { name: 'NEON_FANG', color: '#00f5d4' },
+  { name: 'VOID_BITE', color: '#a855f7' },
+  { name: 'BLOOD_NIB', color: '#ff0055' },
+  { name: 'TOXIC_CRAWL', color: '#2bd966' },
+  { name: 'GOLD_RUSH', color: '#ffd57d' },
+  { name: 'FIRE_BITE', color: '#ff5500' },
+  { name: 'CYBER_WORM', color: '#00c3ff' },
+  { name: 'HOT_NIB', color: '#e60067' },
+  { name: 'BYTE_BITE', color: '#00f5d4' },
+  { name: 'DARK_NIB', color: '#a855f7' },
+  { name: 'LAST_BITE', color: '#ff0055' },
+  { name: 'COIL_KING', color: '#2bd966' },
 ];
 
 export const FlightTerminal: React.FC<FlightTerminalProps> = ({
@@ -57,13 +46,13 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
   const handleRandomize = () => {
     sounds.playBeep(700);
 
-    const filteredNames = RANDOM_CALLSIGNS.filter((c) => c !== callsign);
-    const pickName = filteredNames[Math.floor(Math.random() * filteredNames.length)];
-    setCallsign(pickName);
+    const filteredWorms = RANDOM_WORMS.filter((worm) => worm.name !== callsign);
+    const pickWorm = filteredWorms[Math.floor(Math.random() * filteredWorms.length)];
+
+    setCallsign(pickWorm.name);
 
     if (setWormColor) {
-      const pickColor = WORM_COLORS[Math.floor(Math.random() * WORM_COLORS.length)];
-      setWormColor(pickColor);
+      setWormColor(pickWorm.color);
     }
   };
 
@@ -138,8 +127,12 @@ export const FlightTerminal: React.FC<FlightTerminalProps> = ({
 
           </div>
 
-          <span className="font-mono text-[9px] text-[#83948f]">
-            Pick a name. Then go make it famous.
+          <span className="font-mono text-[9px] leading-relaxed text-[#83948f]">
+            Choose your name & color. Or randomize both.
+          </span>
+
+          <span className="font-mono text-[8px] uppercase tracking-wider text-[#00f5d4]/60">
+            RND · Random Name + Color
           </span>
 
         </div>

@@ -286,6 +286,7 @@ export default function App() {
         isOpen={isFullscreenArenaOpen}
         onClose={() => setIsFullscreenArenaOpen(false)}
         callsign={callsign}
+        wormColor={wormColor}
         onKillsUpdate={handleKillsUpdate}
         onScoreUpdate={handleScoreUpdate}
         soundMuted={soundMuted}

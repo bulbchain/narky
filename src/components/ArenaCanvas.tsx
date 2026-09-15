@@ -113,12 +113,12 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   const [lastScore, setLastScore] = React.useState<number | null>(null);
   const [showDeathModal, setShowDeathModal] = React.useState(false);
 
-  const WEBSITE_URL = 'https://your-website.example';
+  const WEBSITE_URL = 'https://playnarky.lol';
   const TWITTER_URL = 'https://x.com/playnarky';
 
   const shareOnX = useCallback(() => {
     if (lastScore == null) return;
-    const text = `I scored ${lastScore} points in PumpFun Arena! Join me at ${WEBSITE_URL} — follow ${TWITTER_URL} to play.`;
+    const text = `I scored ${lastScore} points in Narky Arena! Join me at ${WEBSITE_URL} — follow ${TWITTER_URL} to play.`;
     const intent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
     window.open(intent, '_blank', 'noopener');
   }, [lastScore]);

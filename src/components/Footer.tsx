@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
               <span>DISCORD</span>
             </a> */}
             <a
-              href="https://x.com"
+              href="https://x.com/playnarky"
               target="_blank"
               rel="noreferrer"
               onClick={() => sounds.playBeep(600)}

@@ -86,7 +86,7 @@ export const ReadyToDriftCTA: React.FC<ReadyToDriftCTAProps> = ({ onLaunchNow })
 
           {/* X / Twitter */}
           <a
-            href="https://x.com"
+            href="https://x.com/playnarky"
             target="_blank"
             rel="noreferrer"
             onClick={() => sounds.playBeep(640)}

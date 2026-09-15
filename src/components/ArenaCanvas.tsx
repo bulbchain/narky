@@ -114,7 +114,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   const [showDeathModal, setShowDeathModal] = React.useState(false);
 
   const WEBSITE_URL = 'https://your-website.example';
-  const TWITTER_URL = 'https://x.com/yourhandle';
+  const TWITTER_URL = 'https://x.com/playnarky';
 
   const shareOnX = useCallback(() => {
     if (lastScore == null) return;

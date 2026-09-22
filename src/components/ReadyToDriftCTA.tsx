@@ -13,7 +13,7 @@ export const ReadyToDriftCTA: React.FC<ReadyToDriftCTAProps> = ({ onLaunchNow })
   const [copied, setCopied] = useState(false);
 
   // Replace this with your actual NARKY token contract address
-  const NARKY_CONTRACT = 'Gfg4Di2fbcv2uA9erX9BtQ57UAmvCJwUSQTW6wYBpump';
+  const NARKY_CONTRACT = 'coming soon';
 
   const handleCopyContract = async () => {
     try {

@@ -13,7 +13,7 @@ export const ReadyToDriftCTA: React.FC<ReadyToDriftCTAProps> = ({ onLaunchNow })
   const [copied, setCopied] = useState(false);
 
   // Replace this with your actual NARKY token contract address
-  const NARKY_CONTRACT = 'D3M8n7wikJuSJj4KW5aQyG8LPsquxFRp93L21FrTpump';
+  const NARKY_CONTRACT = '';
 
   const handleCopyContract = async () => {
     try {
@@ -152,7 +152,7 @@ export const ReadyToDriftCTA: React.FC<ReadyToDriftCTAProps> = ({ onLaunchNow })
 
               {/* Buy */}
               <a
-                href="https://pump.fun/coin/D3M8n7wikJuSJj4KW5aQyG8LPsquxFRp93L21FrTpump"
+                href="https://pump.fun/coin/"
                 onClick={() => sounds.playBeep(720)}
                 className="px-5 py-3 rounded bg-[#f9bd22] text-[#201700] hover:scale-105 font-display text-[11px] tracking-widest uppercase font-bold transition-all"
               >
